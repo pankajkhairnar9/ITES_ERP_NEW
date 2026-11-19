@@ -203,6 +203,35 @@ public sealed class UserRegistrationTests
     }
 
     [Fact]
+    public async Task Invalid_company_submission_renders_admin_index_and_preserves_validation_errors()
+    {
+        await using var db = CreateDatabase();
+        var controller = CreateAdminController(db, actorId: 1);
+        controller.ModelState.AddModelError(nameof(Company.Code), "Company code is required.");
+
+        var result = await controller.SaveCompany(new Company());
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("Index", view.ViewName);
+        Assert.Contains(controller.ModelState[nameof(Company.Code)]!.Errors,
+            error => error.ErrorMessage == "Company code is required.");
+        Assert.Empty(await db.Companies.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Successful_company_submission_redirects_to_admin_index()
+    {
+        await using var db = CreateDatabase();
+        var controller = CreateAdminController(db, actorId: 1);
+
+        var result = await controller.SaveCompany(new Company { Code = "C1", Name = "Company" });
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(AdminController.Index), redirect.ActionName);
+        Assert.Single(await db.Companies.ToListAsync());
+    }
+
+    [Fact]
     public async Task Unassigned_self_registrant_dashboard_does_not_expose_cross_branch_metrics()
     {
         await using var db = CreateDatabase();

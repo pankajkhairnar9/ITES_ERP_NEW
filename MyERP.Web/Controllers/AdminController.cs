@@ -51,7 +51,7 @@ namespace MyERP.Web.Controllers
                 model.EditingUser = await _db.Users.FindAsync(userId.Value);
                 model.EditingUserRoleKeys = userId.Value.ToString();
             }
-            return View(model);
+            return View("Index", model);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
