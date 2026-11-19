@@ -8,6 +8,7 @@
     var selfRegistrantRole = Model.Roles.FirstOrDefault(x => SelfRegistrationDefaults.IsSelfRegistrantRole(x.Name));
     var editingUserIsSelfRegistrant = editingUser != null && selfRegistrantRole != null
         && Model.UserRoleKeys.Contains(editingUser.Id + ":" + selfRegistrantRole.Id);
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 <div class="mb-4"><h1 class="h3 mb-1">Company & access</h1><p class="text-muted mb-0">Configure organizations, branch users, roles, permissions and navigation.</p></div>
 <div asp-validation-summary="All" class="text-danger"></div>
@@ -61,8 +62,9 @@
         @foreach (var user in Model.Users)
         {
             var userIsSelfRegistrant = selfRegistrantRole != null && Model.UserRoleKeys.Contains(user.Id + ":" + selfRegistrantRole.Id);
+            var isCurrentUser = currentUserId == user.Id.ToString();
             <tr><td><a asp-action="Index" asp-route-userId="@user.Id">@user.Email</a></td><td>@(user.Branch == null ? (userIsSelfRegistrant ? "No branch access" : "All branches") : user.Branch.Name)</td><td>@(user.IsActive ? "Active" : "Inactive")</td>
-                <td class="text-nowrap">@foreach (var role in Model.Roles) { var assigned = Model.UserRoleKeys.Contains(user.Id + ":" + role.Id); <form asp-action="SetUserRole" method="post" class="form-check form-check-inline"><input type="hidden" name="userId" value="@user.Id" /><input type="hidden" name="roleId" value="@role.Id" /><input class="form-check-input" type="checkbox" name="enabled" value="true" checked="@assigned" onchange="this.form.submit()" /><label class="form-check-label small">@role.Name</label></form> }</td></tr>
+                <td class="text-nowrap">@foreach (var role in Model.Roles) { var assigned = Model.UserRoleKeys.Contains(user.Id + ":" + role.Id); <form asp-action="SetUserRole" method="post" class="form-check form-check-inline"><input type="hidden" name="userId" value="@user.Id" /><input type="hidden" name="roleId" value="@role.Id" /><input class="form-check-input" type="checkbox" name="enabled" value="true" checked="@assigned" disabled="@isCurrentUser" title="You cannot change your own role assignments" onchange="if (window.confirm('Apply this role change?')) { this.form.submit(); } else { this.checked = !this.checked; }" /><label class="form-check-label small">@role.Name</label></form> }</td></tr>
         }
         </tbody></table></div>
     </div></div></div>

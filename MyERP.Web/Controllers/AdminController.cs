@@ -1,11 +1,13 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MyERP.Application;
 using MyERP.Domain;
 using MyERP.Web.Models;
@@ -18,11 +20,13 @@ namespace MyERP.Web.Controllers
     {
         private readonly IErpDbContext _db;
         private readonly IPasswordHasher<ErpUser> _passwordHasher;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IErpDbContext db, IPasswordHasher<ErpUser> passwordHasher)
+        public AdminController(IErpDbContext db, IPasswordHasher<ErpUser> passwordHasher, ILogger<AdminController> logger)
         {
             _db = db;
             _passwordHasher = passwordHasher;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(int? companyId = null, int? branchId = null, int? userId = null)
@@ -184,10 +188,36 @@ namespace MyERP.Web.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SetUserRole(int userId, int roleId, bool enabled)
         {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var actorId))
+                return Forbid();
+            if (actorId == userId)
+            {
+                _logger.LogWarning("Administrator {AdministratorId} attempted to change their own role assignments.", actorId);
+                ModelState.AddModelError(string.Empty, "You cannot change your own role assignments.");
+                return await Index();
+            }
+
+            var user = await _db.Users.FindAsync(userId);
+            var role = await _db.Roles.FindAsync(roleId);
+            if (user == null || role == null)
+                return NotFound();
+
             var current = await _db.UserRoles.SingleOrDefaultAsync(x => x.UserId == userId && x.RoleId == roleId);
-            if (enabled && current == null) _db.UserRoles.Add(new ErpUserRole { UserId = userId, RoleId = roleId });
-            if (!enabled && current != null) _db.UserRoles.Remove(current);
+            var changed = false;
+            if (enabled && current == null)
+            {
+                _db.UserRoles.Add(new ErpUserRole { UserId = userId, RoleId = roleId });
+                changed = true;
+            }
+            if (!enabled && current != null)
+            {
+                _db.UserRoles.Remove(current);
+                changed = true;
+            }
             await _db.SaveChangesAsync();
+            if (changed)
+                _logger.LogInformation("Administrator {AdministratorId} changed role {RoleId} for user {TargetUserId}; enabled={Enabled}.",
+                    actorId, roleId, userId, enabled);
             return RedirectToAction(nameof(Index));
         }
 
