@@ -1,0 +1,19 @@
+:root {
+  --erp-ink: #1d2b3a;
+  --erp-muted: #687789;
+  --erp-surface: #f5f7fa;
+}
+
+html { font-size: 15px; min-height: 100%; }
+body { background: var(--erp-surface); color: var(--erp-ink); min-height: 100vh; }
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+.navbar-brand { letter-spacing: .02em; }
+.card { border: 1px solid #e8edf2; border-radius: .75rem; box-shadow: 0 .2rem .7rem rgba(23, 43, 77, .04); }
+.metric-card { min-height: 145px; }
+.metric { font-size: 2rem; font-weight: 650; letter-spacing: -.03em; margin: .35rem 0; }
+.table > :not(caption) > * > * { vertical-align: middle; }
+.table thead th { color: var(--erp-muted); font-size: .82rem; font-weight: 600; text-transform: uppercase; }
+.form-label { font-weight: 550; }
+.document-lines .form-control, .document-lines .form-select { min-width: 100px; }
+.status-pill { text-transform: capitalize; }
