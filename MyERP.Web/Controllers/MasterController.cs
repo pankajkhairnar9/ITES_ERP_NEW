@@ -65,21 +65,21 @@ namespace MyERP.Web.Controllers
             {
                 var entity = id == 0 ? new Supplier() : await _db.Suppliers.FindAsync(id);
                 if (entity == null) return NotFound();
-                entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.ContactName = input.ContactName; entity.Email = input.Email; entity.Phone = input.Phone; entity.Address = input.Address; entity.IsActive = true;
+                entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.ContactName = input.ContactName; entity.Email = input.Email; entity.Phone = input.Phone; entity.Address = input.Address;
                 if (id == 0) _db.Suppliers.Add(entity);
             }
             else if (normalized == "Customers")
             {
                 var entity = id == 0 ? new Customer() : await _db.Customers.FindAsync(id);
                 if (entity == null) return NotFound();
-                entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.ContactName = input.ContactName; entity.Email = input.Email; entity.Phone = input.Phone; entity.Address = input.Address; entity.IsActive = true;
+                entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.ContactName = input.ContactName; entity.Email = input.Email; entity.Phone = input.Phone; entity.Address = input.Address;
                 if (id == 0) _db.Customers.Add(entity);
             }
             else
             {
                 var entity = id == 0 ? new Item() : await _db.Items.FindAsync(id);
                 if (entity == null) return NotFound();
-                entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.Unit = input.Unit; entity.UnitPrice = input.UnitPrice; entity.ReorderLevel = input.ReorderLevel; entity.IsActive = true;
+                entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.Unit = input.Unit; entity.UnitPrice = input.UnitPrice; entity.ReorderLevel = input.ReorderLevel;
                 if (id == 0) _db.Items.Add(entity);
             }
             await _db.SaveChangesAsync();

@@ -55,19 +55,19 @@ namespace MyERP.Web.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveCompany(Company input)
+        public async Task<IActionResult> SaveCompany(CompanyInputViewModel input)
         {
             if (!ModelState.IsValid) return await Index();
             var entity = input.Id == 0 ? new Company() : await _db.Companies.FindAsync(input.Id);
             if (entity == null) return NotFound();
-            entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.Address = input.Address; entity.Phone = input.Phone; entity.IsActive = input.IsActive;
+            entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.Address = input.Address; entity.Phone = input.Phone;
             if (input.Id == 0) _db.Companies.Add(entity);
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveBranch(Branch input)
+        public async Task<IActionResult> SaveBranch(BranchInputViewModel input)
         {
             if (!ModelState.IsValid) return await Index();
             if (!await _db.Companies.AnyAsync(x => x.Id == input.CompanyId && x.IsActive))
@@ -77,7 +77,7 @@ namespace MyERP.Web.Controllers
             }
             var entity = input.Id == 0 ? new Branch() : await _db.Branches.FindAsync(input.Id);
             if (entity == null) return NotFound();
-            entity.CompanyId = input.CompanyId; entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.Address = input.Address; entity.IsActive = input.IsActive;
+            entity.CompanyId = input.CompanyId; entity.Code = input.Code.Trim(); entity.Name = input.Name.Trim(); entity.Address = input.Address;
             if (input.Id == 0) _db.Branches.Add(entity);
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -86,6 +86,7 @@ namespace MyERP.Web.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveUserDetails(int id, string userName, string email, string password, int? branchId, bool isActive)
         {
+            if (!ModelState.IsValid) return await Index(userId: id);
             var user = await _db.Users.FindAsync(id);
             if (user == null) return NotFound();
             if (string.IsNullOrWhiteSpace(userName) || userName.Length > 100 || !new EmailAddressAttribute().IsValid(email)
@@ -145,6 +146,7 @@ namespace MyERP.Web.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignPermission(int roleId, int permissionId, bool enabled)
         {
+            if (!ModelState.IsValid) return await Index();
             var role = await _db.Roles.FindAsync(roleId);
             var permission = await _db.Permissions.FindAsync(permissionId);
             if (role == null || permission == null) return NotFound();
@@ -165,6 +167,7 @@ namespace MyERP.Web.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveMenu(string name, string url, string permissionCode, int sortOrder)
         {
+            if (!ModelState.IsValid) return await Index();
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(permissionCode))
             {
                 ModelState.AddModelError(string.Empty, "Menu name, URL and required permission are required.");
@@ -188,6 +191,7 @@ namespace MyERP.Web.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SetUserRole(int userId, int roleId, bool enabled)
         {
+            if (!ModelState.IsValid) return await Index();
             if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var actorId))
                 return Forbid();
             if (actorId == userId)
