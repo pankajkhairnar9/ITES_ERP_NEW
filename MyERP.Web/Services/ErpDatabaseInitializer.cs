@@ -1,4 +1,6 @@
 using System;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -30,7 +32,13 @@ namespace MyERP.Web.Services
 
         public async Task InitializeAsync()
         {
-            await _db.Database.EnsureCreatedAsync();
+            if (await _db.Database.CanConnectAsync())
+            {
+                var appliedMigrations = await _db.Database.GetAppliedMigrationsAsync();
+                if (!appliedMigrations.Any() && await HasApplicationTablesAsync())
+                    throw new InvalidOperationException("The database already contains tables but is not tracked by EF Core migrations. Review and baseline the existing schema before enabling automatic migration.");
+            }
+            await _db.Database.MigrateAsync();
 
             var permissions = new[]
             {
@@ -103,6 +111,27 @@ namespace MyERP.Web.Services
                     _db.MenuItems.Add(item);
 
             await _db.SaveChangesAsync();
+        }
+
+        private async Task<bool> HasApplicationTablesAsync()
+        {
+            var connection = _db.Database.GetDbConnection();
+            var closeWhenDone = connection.State != ConnectionState.Open;
+            if (closeWhenDone)
+                await connection.OpenAsync();
+            try
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME <> '__EFMigrationsHistory'";
+                    return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+                }
+            }
+            finally
+            {
+                if (closeWhenDone)
+                    await connection.CloseAsync();
+            }
         }
     }
 }
