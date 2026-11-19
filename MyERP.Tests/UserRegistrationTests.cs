@@ -151,7 +151,7 @@ public sealed class UserRegistrationTests
         var permission = new ErpPermission { Code = "purchase.order", Name = "Orders", Module = "Purchasing" };
         db.AddRange(role, permission);
         await db.SaveChangesAsync();
-        var controller = new AdminController(db, new PasswordHasher<ErpUser>());
+        var controller = new AdminController(db, new PasswordHasher<ErpUser>(), NullLogger<AdminController>.Instance);
 
         var result = await controller.AssignPermission(role.Id, permission.Id, enabled: true);
 
@@ -159,6 +159,47 @@ public sealed class UserRegistrationTests
         Assert.Contains(controller.ModelState[string.Empty]!.Errors,
             error => error.ErrorMessage.Contains("dashboard.view", StringComparison.Ordinal));
         Assert.Empty(await db.RolePermissions.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Admin_can_promote_another_user_to_administrator()
+    {
+        await using var db = CreateDatabase();
+        var actor = new ErpUser { UserName = "Administrator", Email = "admin@example.test", PasswordHash = "hash", IsActive = true };
+        var target = new ErpUser { UserName = "New User", Email = "new.user@example.test", PasswordHash = "hash", IsActive = true };
+        var selfRegistrant = new ErpRole { Name = SelfRegistrationDefaults.RoleName };
+        var administrator = new ErpRole { Name = "Administrator" };
+        db.AddRange(actor, target, selfRegistrant, administrator);
+        await db.SaveChangesAsync();
+        db.UserRoles.Add(new ErpUserRole { UserId = target.Id, RoleId = selfRegistrant.Id });
+        await db.SaveChangesAsync();
+        var controller = CreateAdminController(db, actor.Id);
+
+        var result = await controller.SetUserRole(target.Id, administrator.Id, enabled: true);
+
+        Assert.Equal(nameof(AdminController.Index), Assert.IsType<RedirectToActionResult>(result).ActionName);
+        Assert.True(await db.UserRoles.AnyAsync(x => x.UserId == target.Id && x.RoleId == administrator.Id));
+    }
+
+    [Fact]
+    public async Task Admin_cannot_promote_themselves_to_administrator()
+    {
+        await using var db = CreateDatabase();
+        var actor = new ErpUser { UserName = "Existing user", Email = "existing@example.test", PasswordHash = "hash", IsActive = true };
+        var selfRegistrant = new ErpRole { Name = SelfRegistrationDefaults.RoleName };
+        var administrator = new ErpRole { Name = "Administrator" };
+        db.AddRange(actor, selfRegistrant, administrator);
+        await db.SaveChangesAsync();
+        db.UserRoles.Add(new ErpUserRole { UserId = actor.Id, RoleId = selfRegistrant.Id });
+        await db.SaveChangesAsync();
+        var controller = CreateAdminController(db, actor.Id);
+
+        var result = await controller.SetUserRole(actor.Id, administrator.Id, enabled: true);
+
+        Assert.IsType<ViewResult>(result);
+        Assert.Contains(controller.ModelState[string.Empty]!.Errors,
+            error => error.ErrorMessage.Contains("own role", StringComparison.OrdinalIgnoreCase));
+        Assert.False(await db.UserRoles.AnyAsync(x => x.UserId == actor.Id && x.RoleId == administrator.Id));
     }
 
     [Fact]
@@ -211,6 +252,11 @@ public sealed class UserRegistrationTests
 
         Assert.NotNull(registerPost.GetCustomAttribute<AllowAnonymousAttribute>());
         Assert.NotNull(registerPost.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+
+        var setUserRole = typeof(AdminController).GetMethod(nameof(AdminController.SetUserRole),
+            new[] { typeof(int), typeof(int), typeof(bool) })!;
+        Assert.NotNull(setUserRole.GetCustomAttribute<HttpPostAttribute>());
+        Assert.NotNull(setUserRole.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
     }
 
     private static ErpDbContext CreateDatabase()
@@ -246,6 +292,17 @@ public sealed class UserRegistrationTests
             Email = "New.User@Example.Test",
             Password = new string('x', 16),
             ConfirmPassword = new string('x', 16)
+        };
+    }
+
+    private static AdminController CreateAdminController(ErpDbContext db, int actorId)
+    {
+        var context = new DefaultHttpContext();
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(
+            new[] { new Claim(ClaimTypes.NameIdentifier, actorId.ToString()) }, "test"));
+        return new AdminController(db, new PasswordHasher<ErpUser>(), NullLogger<AdminController>.Instance)
+        {
+            ControllerContext = new ControllerContext { HttpContext = context }
         };
     }
 
