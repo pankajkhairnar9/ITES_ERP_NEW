@@ -207,13 +207,13 @@ public sealed class UserRegistrationTests
     {
         await using var db = CreateDatabase();
         var controller = CreateAdminController(db, actorId: 1);
-        controller.ModelState.AddModelError(nameof(Company.Code), "Company code is required.");
+        controller.ModelState.AddModelError(nameof(CompanyInputViewModel.Code), "Company code is required.");
 
-        var result = await controller.SaveCompany(new Company());
+        var result = await controller.SaveCompany(new CompanyInputViewModel());
 
         var view = Assert.IsType<ViewResult>(result);
         Assert.Equal("Index", view.ViewName);
-        Assert.Contains(controller.ModelState[nameof(Company.Code)]!.Errors,
+        Assert.Contains(controller.ModelState[nameof(CompanyInputViewModel.Code)]!.Errors,
             error => error.ErrorMessage == "Company code is required.");
         Assert.Empty(await db.Companies.ToListAsync());
     }
@@ -224,11 +224,58 @@ public sealed class UserRegistrationTests
         await using var db = CreateDatabase();
         var controller = CreateAdminController(db, actorId: 1);
 
-        var result = await controller.SaveCompany(new Company { Code = "C1", Name = "Company" });
+        var result = await controller.SaveCompany(new CompanyInputViewModel { Code = "C1", Name = "Company" });
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(AdminController.Index), redirect.ActionName);
         Assert.Single(await db.Companies.ToListAsync());
+    }
+
+    [Fact]
+    public async Task User_status_checkbox_can_set_active_and_inactive_values()
+    {
+        await using var db = CreateDatabase();
+        var user = new ErpUser
+        {
+            UserName = "Status User",
+            Email = "status@example.test",
+            PasswordHash = "hash",
+            IsActive = true
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        var controller = CreateAdminController(db, actorId: 1);
+
+        var deactivate = await controller.SaveUserDetails(user.Id, user.UserName, user.Email, null, null, isActive: false);
+        Assert.Equal(nameof(AdminController.Index), Assert.IsType<RedirectToActionResult>(deactivate).ActionName);
+        Assert.False(user.IsActive);
+
+        var activate = await controller.SaveUserDetails(user.Id, user.UserName, user.Email, null, null, isActive: true);
+        Assert.Equal(nameof(AdminController.Index), Assert.IsType<RedirectToActionResult>(activate).ActionName);
+        Assert.True(user.IsActive);
+    }
+
+    [Fact]
+    public async Task Invalid_user_status_value_does_not_deactivate_user()
+    {
+        await using var db = CreateDatabase();
+        var user = new ErpUser
+        {
+            UserName = "Status User",
+            Email = "status@example.test",
+            PasswordHash = "hash",
+            IsActive = true
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        var controller = CreateAdminController(db, actorId: 1);
+        controller.ModelState.AddModelError("isActive", "The value 'value' is not valid for IsActive.");
+
+        var result = await controller.SaveUserDetails(user.Id, user.UserName, user.Email, null, null, isActive: false);
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("Index", view.ViewName);
+        Assert.True(user.IsActive);
     }
 
     [Fact]

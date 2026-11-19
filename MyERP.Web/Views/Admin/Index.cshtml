@@ -17,7 +17,6 @@
         <h2 class="h5">Companies</h2>
         <form asp-action="SaveCompany" method="post" class="row g-2 mb-3">
             <input name="Id" type="hidden" value="@(editingCompany?.Id ?? 0)" />
-            <input name="IsActive" type="hidden" value="@(editingCompany?.IsActive ?? true)" />
             <div class="col-md-3"><input class="form-control" name="Code" placeholder="Code" required maxlength="40" value="@(editingCompany?.Code ?? "")" /></div>
             <div class="col-md-4"><input class="form-control" name="Name" placeholder="Company name" required maxlength="160" value="@(editingCompany?.Name ?? "")" /></div>
             <div class="col-md-3"><input class="form-control" name="Phone" placeholder="Phone" value="@(editingCompany?.Phone ?? "")" /></div>
@@ -33,7 +32,6 @@
         <h2 class="h5">Branches</h2>
         <form asp-action="SaveBranch" method="post" class="row g-2 mb-3">
             <input name="Id" type="hidden" value="@(editingBranch?.Id ?? 0)" />
-            <input name="IsActive" type="hidden" value="@(editingBranch?.IsActive ?? true)" />
             <div class="col-md-4"><select class="form-select" name="CompanyId" required><option value="">Company</option>@foreach (var c in Model.Companies) { <option value="@c.Id" selected="@(editingBranch?.CompanyId == c.Id)">@c.Name</option> }</select></div>
             <div class="col-md-2"><input class="form-control" name="Code" placeholder="Code" required value="@(editingBranch?.Code ?? "")" /></div>
             <div class="col-md-4"><input class="form-control" name="Name" placeholder="Branch name" required value="@(editingBranch?.Name ?? "")" /></div>

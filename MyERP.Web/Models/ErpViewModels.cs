@@ -51,6 +51,40 @@ namespace MyERP.Web.Models
         public decimal ReorderLevel { get; set; }
     }
 
+    public sealed class CompanyInputViewModel
+    {
+        public int Id { get; set; }
+
+        [Required, StringLength(40)]
+        public string Code { get; set; }
+
+        [Required, StringLength(160)]
+        public string Name { get; set; }
+
+        [StringLength(400)]
+        public string Address { get; set; }
+
+        [StringLength(40)]
+        public string Phone { get; set; }
+    }
+
+    public sealed class BranchInputViewModel
+    {
+        public int Id { get; set; }
+
+        [Range(1, int.MaxValue)]
+        public int CompanyId { get; set; }
+
+        [Required, StringLength(40)]
+        public string Code { get; set; }
+
+        [Required, StringLength(160)]
+        public string Name { get; set; }
+
+        [StringLength(400)]
+        public string Address { get; set; }
+    }
+
     public sealed class MasterRow
     {
         public int Id { get; set; }
