@@ -1,0 +1,17 @@
+@model MyERP.Web.Models.OperationPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="mb-3"><h1 class="h3 mb-1">Stock adjustment</h1><p class="text-muted mb-0">Record a positive or negative inventory correction with a reason.</p></div>
+@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+@if (TempData["Message"] != null) { <div class="alert alert-success">@TempData["Message"]</div> }
+<div class="card"><div class="card-body">
+    <form asp-action="Adjustments" method="post" class="row g-3">
+        <div class="col-md-3"><label class="form-label">Reference</label><input class="form-control" name="reference" maxlength="40" required value="ADJ-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" /></div>
+        <div class="col-md-3"><label class="form-label">Branch</label><select class="form-select" name="branchId" required><option value="">Select branch</option>@foreach (var branch in Model.Branches) { <option value="@branch.Id">@branch.Name</option> }</select></div>
+        <div class="col-md-3"><label class="form-label">Item</label><select class="form-select" name="itemId" required><option value="">Select item</option>@foreach (var item in Model.Items) { <option value="@item.Id">@item.Code — @item.Name</option> }</select></div>
+        <div class="col-md-3"><label class="form-label">Quantity change (+/-)</label><input class="form-control" type="number" name="quantityDelta" step="0.001" required /></div>
+        <div class="col-12"><label class="form-label">Reason</label><textarea class="form-control" name="reason" maxlength="400" required></textarea></div>
+        <div class="col-12"><button class="btn btn-primary">Post adjustment</button><a asp-action="Reports" class="btn btn-light">View stock report</a></div>
+    </form>
+</div></div>

@@ -1,0 +1,115 @@
+@model MyERP.Web.Models.AdminPageViewModel
+@{
+    ViewData["Title"] = "Company & access";
+    var editingCompany = Model.EditingCompany;
+    var editingBranch = Model.EditingBranch;
+    var editingUser = Model.EditingUser;
+}
+<div class="mb-4"><h1 class="h3 mb-1">Company & access</h1><p class="text-muted mb-0">Configure organizations, branch users, roles, permissions and navigation.</p></div>
+<div asp-validation-summary="All" class="text-danger"></div>
+<div class="row g-3">
+    <div class="col-xl-6"><div class="card"><div class="card-body">
+        <h2 class="h5">Companies</h2>
+        <form asp-action="SaveCompany" method="post" class="row g-2 mb-3">
+            <input name="Id" type="hidden" value="@(editingCompany?.Id ?? 0)" />
+            <input name="IsActive" type="hidden" value="@(editingCompany?.IsActive ?? true)" />
+            <div class="col-md-3"><input class="form-control" name="Code" placeholder="Code" required maxlength="40" value="@(editingCompany?.Code ?? "")" /></div>
+            <div class="col-md-4"><input class="form-control" name="Name" placeholder="Company name" required maxlength="160" value="@(editingCompany?.Name ?? "")" /></div>
+            <div class="col-md-3"><input class="form-control" name="Phone" placeholder="Phone" value="@(editingCompany?.Phone ?? "")" /></div>
+            <div class="col-md-10"><input class="form-control" name="Address" placeholder="Address" value="@(editingCompany?.Address ?? "")" /></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100">@(editingCompany == null ? "Add" : "Update")</button></div>
+        </form>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Code</th><th>Company</th><th>Status</th><th></th></tr></thead><tbody>
+        @foreach (var company in Model.Companies) { <tr><td>@company.Code</td><td>@company.Name</td><td>@(company.IsActive ? "Active" : "Inactive")</td><td><a asp-action="Index" asp-route-companyId="@company.Id">Edit</a></td></tr> }
+        @if (!Model.Companies.Any()) { <tr><td colspan="3" class="text-muted">Add a company to start setup.</td></tr> }
+        </tbody></table></div>
+    </div></div></div>
+    <div class="col-xl-6"><div class="card"><div class="card-body">
+        <h2 class="h5">Branches</h2>
+        <form asp-action="SaveBranch" method="post" class="row g-2 mb-3">
+            <input name="Id" type="hidden" value="@(editingBranch?.Id ?? 0)" />
+            <input name="IsActive" type="hidden" value="@(editingBranch?.IsActive ?? true)" />
+            <div class="col-md-4"><select class="form-select" name="CompanyId" required><option value="">Company</option>@foreach (var c in Model.Companies) { <option value="@c.Id" selected="@(editingBranch?.CompanyId == c.Id)">@c.Name</option> }</select></div>
+            <div class="col-md-2"><input class="form-control" name="Code" placeholder="Code" required value="@(editingBranch?.Code ?? "")" /></div>
+            <div class="col-md-4"><input class="form-control" name="Name" placeholder="Branch name" required value="@(editingBranch?.Name ?? "")" /></div>
+            <div class="col-md-10"><input class="form-control" name="Address" placeholder="Address" value="@(editingBranch?.Address ?? "")" /></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100">@(editingBranch == null ? "Add" : "Update")</button></div>
+        </form>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Code</th><th>Branch</th><th>Company</th><th></th></tr></thead><tbody>
+        @foreach (var branch in Model.Branches) { <tr><td>@branch.Code</td><td>@branch.Name</td><td>@branch.Company.Name</td><td><a asp-action="Index" asp-route-branchId="@branch.Id">Edit</a></td></tr> }
+        </tbody></table></div>
+    </div></div></div>
+    <div class="col-xl-6"><div class="card"><div class="card-body">
+        <h2 class="h5">Users</h2>
+        @if (editingUser == null)
+        {
+            <form asp-action="SaveUser" method="post" class="row g-2 mb-3">
+                <div class="col-md-6"><input class="form-control" name="userName" placeholder="Display name" required maxlength="100" /></div>
+                <div class="col-md-6"><input class="form-control" type="email" name="email" placeholder="Email" required /></div>
+                <div class="col-md-6"><input class="form-control" type="password" name="password" placeholder="Temporary password (12+ characters)" minlength="12" required autocomplete="new-password" /></div>
+                <div class="col-md-3"><select class="form-select" name="branchId"><option value="">All branches</option>@foreach (var b in Model.Branches) { <option value="@b.Id">@b.Name</option> }</select></div>
+                <div class="col-md-3"><select class="form-select" name="roleId" required><option value="">Role</option>@foreach (var r in Model.Roles) { <option value="@r.Id">@r.Name</option> }</select></div>
+                <div class="col-12"><button class="btn btn-primary">Create user</button></div>
+            </form>
+        }
+        else
+        {
+            <form asp-action="SaveUserDetails" method="post" class="row g-2 mb-3">
+                <input type="hidden" name="id" value="@editingUser.Id" />
+                <div class="col-md-3"><input class="form-control" name="userName" value="@editingUser.UserName" required maxlength="100" /></div>
+                <div class="col-md-3"><input class="form-control" type="email" name="email" value="@editingUser.Email" required /></div>
+                <div class="col-md-3"><input class="form-control" type="password" name="password" placeholder="New password (optional, 12+)" minlength="12" autocomplete="new-password" /></div>
+                <div class="col-md-2"><select class="form-select" name="branchId"><option value="">All branches</option>@foreach (var b in Model.Branches) { <option value="@b.Id" selected="@(editingUser.BranchId == b.Id)">@b.Name</option> }</select></div>
+                <div class="col-md-1"><input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@editingUser.IsActive" title="Active" /></div>
+                <div class="col-12"><button class="btn btn-primary">Save user</button> <a class="btn btn-light" asp-action="Index">Cancel</a></div>
+            </form>
+        }
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>User</th><th>Branch</th><th>Status</th><th>Roles</th></tr></thead><tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr><td><a asp-action="Index" asp-route-userId="@user.Id">@user.Email</a></td><td>@(user.Branch == null ? "All branches" : user.Branch.Name)</td><td>@(user.IsActive ? "Active" : "Inactive")</td>
+                <td class="text-nowrap">@foreach (var role in Model.Roles) { var assigned = Model.UserRoleKeys.Contains(user.Id + ":" + role.Id); <form asp-action="SetUserRole" method="post" class="form-check form-check-inline"><input type="hidden" name="userId" value="@user.Id" /><input type="hidden" name="roleId" value="@role.Id" /><input class="form-check-input" type="checkbox" name="enabled" value="true" checked="@assigned" onchange="this.form.submit()" /><label class="form-check-label small">@role.Name</label></form> }</td></tr>
+        }
+        </tbody></table></div>
+    </div></div></div>
+    <div class="col-xl-6"><div class="card"><div class="card-body">
+        <h2 class="h5">Roles & permissions</h2>
+        <form asp-action="SaveRole" method="post" class="row g-2 mb-3">
+            <div class="col-md-4"><input class="form-control" name="name" placeholder="Role name" required /></div>
+            <div class="col-md-6"><input class="form-control" name="description" placeholder="Description" /></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100">Add role</button></div>
+        </form>
+        @foreach (var role in Model.Roles)
+        {
+            <h3 class="h6 mt-3">@role.Name <small class="text-muted">@role.Description</small></h3>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+            @foreach (var permission in Model.Permissions)
+            {
+                var granted = Model.RolePermissionKeys.Contains(role.Id + ":" + permission.Id);
+                <form asp-action="AssignPermission" method="post" class="form-check">
+                    <input type="hidden" name="roleId" value="@role.Id" /><input type="hidden" name="permissionId" value="@permission.Id" />
+                    <input class="form-check-input" type="checkbox" name="enabled" value="true" checked="@granted" onchange="this.form.submit()" />
+                    <label class="form-check-label small">@permission.Name</label>
+                </form>
+            }
+            </div>
+        }
+        <form asp-action="SavePermission" method="post" class="row g-2">
+            <div class="col-md-3"><input class="form-control" name="code" placeholder="permission.code" required /></div>
+            <div class="col-md-4"><input class="form-control" name="name" placeholder="Permission name" required /></div>
+            <div class="col-md-3"><input class="form-control" name="module" placeholder="Module" required /></div>
+            <div class="col-md-2"><button class="btn btn-outline-primary w-100">Add permission</button></div>
+        </form>
+    </div></div></div>
+    <div class="col-12"><div class="card"><div class="card-body">
+        <h2 class="h5">Dynamic navigation</h2>
+        <form asp-action="SaveMenu" method="post" class="row g-2 mb-3">
+            <div class="col-md-3"><input class="form-control" name="name" placeholder="Label" required /></div>
+            <div class="col-md-4"><input class="form-control" name="url" placeholder="/Controller/Action" required /></div>
+            <div class="col-md-3"><select class="form-select" name="permissionCode" required><option value="">Required permission</option>@foreach (var p in Model.Permissions) { <option value="@p.Code">@p.Name</option> }</select></div>
+            <div class="col-md-1"><input class="form-control" type="number" name="sortOrder" value="50" /></div>
+            <div class="col-md-1"><button class="btn btn-primary w-100">Add</button></div>
+        </form>
+        <div class="d-flex flex-wrap gap-2">@foreach (var menu in Model.Menus) { <span class="badge text-bg-light">@menu.SortOrder · @menu.Name <small>(@menu.PermissionCode)</small></span> }</div>
+    </div></div></div>
+</div>

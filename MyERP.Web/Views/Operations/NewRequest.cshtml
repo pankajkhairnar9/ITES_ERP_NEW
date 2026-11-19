@@ -1,0 +1,26 @@
+@model MyERP.Web.Models.OperationPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="mb-3"><h1 class="h3">New purchase request</h1><p class="text-muted">Submitting a request sends it into the approval workflow.</p></div>
+<div class="card"><div class="card-body">
+    <form asp-action="NewRequest" method="post" ng-controller="documentLines">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+        <div class="row g-3">
+            <div class="col-md-4"><label class="form-label">Request number</label><input name="Input.Number" class="form-control" required maxlength="40" value="PR-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" /></div>
+            <div class="col-md-4"><label class="form-label">Branch</label><select name="Input.BranchId" class="form-select" required><option value="">Select branch</option>@foreach (var branch in Model.Branches) { <option value="@branch.Id">@branch.Name</option> }</select></div>
+            <div class="col-md-4"><label class="form-label">Notes</label><input name="Input.Notes" class="form-control" maxlength="400" /></div>
+        </div>
+        <h2 class="h5 mt-4">Items</h2>
+        <div class="table-responsive document-lines"><table class="table align-middle">
+            <thead><tr><th>Item</th><th>Quantity</th><th>Estimated unit price</th><th></th></tr></thead>
+            <tbody><tr ng-repeat="line in lines">
+                <td><select class="form-select" ng-model="line.itemId" name="Input.Lines[{{$index}}].ItemId" required><option value="">Select item</option>@foreach (var item in Model.Items) { <option value="@item.Id">@item.Code — @item.Name</option> }</select></td>
+                <td><input class="form-control" type="number" step="0.001" min="0.001" ng-model="line.quantity" name="Input.Lines[{{$index}}].Quantity" required /></td>
+                <td><input class="form-control" type="number" step="0.01" min="0" ng-model="line.unitPrice" name="Input.Lines[{{$index}}].UnitPrice" required /></td>
+                <td><button class="btn btn-sm btn-outline-danger" type="button" ng-click="removeLine($index)">Remove</button></td>
+            </tr></tbody>
+        </table></div>
+        <div class="d-flex gap-2"><button type="button" class="btn btn-outline-primary" ng-click="addLine()">Add item</button><button type="submit" class="btn btn-primary">Submit request</button><a asp-action="Requests" class="btn btn-light">Cancel</a></div>
+    </form>
+</div></div>

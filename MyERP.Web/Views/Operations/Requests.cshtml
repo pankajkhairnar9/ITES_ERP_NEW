@@ -1,0 +1,27 @@
+@model MyERP.Web.Models.OperationPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div><h1 class="h3 mb-1">Purchase requests</h1><p class="text-muted mb-0">Submit requirements and review requests before purchase ordering.</p></div>
+    <a class="btn btn-primary" asp-action="NewRequest">New request</a>
+</div>
+@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+<div class="card"><div class="card-body">
+    <div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>Request</th><th>Branch</th><th>Submitted</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+        <tbody>
+        @foreach (var row in Model.Rows)
+        {
+            <tr><td class="fw-semibold">@row.Number</td><td>@row.Branch</td><td>@row.Date.ToLocalTime().ToString("dd MMM yyyy")</td><td><span class="badge text-bg-light status-pill">@row.Status</span></td><td class="text-end">
+                @if (row.Status == MyERP.Domain.WorkflowStatus.Submitted && User.HasClaim("permission", "purchase.approve"))
+                {
+                    <form asp-action="ReviewRequest" method="post" class="d-inline"><input type="hidden" name="id" value="@row.Id" /><input type="hidden" name="approve" value="true" /><button class="btn btn-sm btn-success">Approve</button></form>
+                    <form asp-action="ReviewRequest" method="post" class="d-inline"><input type="hidden" name="id" value="@row.Id" /><input type="hidden" name="approve" value="false" /><button class="btn btn-sm btn-outline-danger">Reject</button></form>
+                }
+            </td></tr>
+        }
+        @if (!Model.Rows.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">No purchase requests yet.</td></tr> }
+        </tbody>
+    </table></div>
+</div></div>

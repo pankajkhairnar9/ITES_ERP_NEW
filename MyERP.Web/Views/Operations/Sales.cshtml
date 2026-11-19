@@ -1,0 +1,35 @@
+@model MyERP.Web.Models.OperationPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="mb-3"><h1 class="h3 mb-1">Sales orders</h1><p class="text-muted mb-0">Create sales orders and dispatch only when stock is available.</p></div>
+@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+@if (TempData["Message"] != null) { <div class="alert alert-success">@TempData["Message"]</div> }
+<div class="card mb-3"><div class="card-body">
+    <h2 class="h5">New sales order</h2>
+    <form asp-action="Sales" method="post" ng-controller="documentLines">
+        <div class="row g-3">
+            <div class="col-md-3"><label class="form-label">Order number</label><input name="Input.Number" class="form-control" required value="SO-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" /></div>
+            <div class="col-md-3"><label class="form-label">Branch</label><select name="Input.BranchId" class="form-select" required><option value="">Select branch</option>@foreach (var branch in Model.Branches) { <option value="@branch.Id">@branch.Name</option> }</select></div>
+            <div class="col-md-3"><label class="form-label">Customer</label><select name="Input.PartyId" class="form-select" required><option value="">Select customer</option>@foreach (var customer in Model.Customers) { <option value="@customer.Id">@customer.Name</option> }</select></div>
+            <div class="col-md-3"><label class="form-label">Notes</label><input name="Input.Notes" class="form-control" /></div>
+        </div>
+        <h3 class="h6 mt-4">Order lines</h3>
+        <div class="table-responsive document-lines"><table class="table"><thead><tr><th>Item</th><th>Quantity</th><th>Unit price</th><th></th></tr></thead><tbody>
+            <tr ng-repeat="line in lines"><td><select class="form-select" ng-model="line.itemId" name="Input.Lines[{{$index}}].ItemId" required><option value="">Select item</option>@foreach (var item in Model.Items) { <option value="@item.Id">@item.Code — @item.Name</option> }</select></td>
+                <td><input class="form-control" type="number" min="0.001" step="0.001" ng-model="line.quantity" name="Input.Lines[{{$index}}].Quantity" required /></td>
+                <td><input class="form-control" type="number" min="0" step="0.01" ng-model="line.unitPrice" name="Input.Lines[{{$index}}].UnitPrice" required /></td>
+                <td><button class="btn btn-sm btn-outline-danger" type="button" ng-click="removeLine($index)">Remove</button></td></tr>
+        </tbody></table></div>
+        <div class="d-flex gap-2"><button type="button" class="btn btn-outline-primary" ng-click="addLine()">Add item</button><button class="btn btn-primary">Create sales order</button></div>
+    </form>
+</div></div>
+<div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Order</th><th>Customer</th><th>Branch</th><th>Date</th><th>Status</th><th class="text-end">Action</th></tr></thead><tbody>
+@foreach (var row in Model.Rows)
+{
+    <tr><td class="fw-semibold">@row.Number</td><td>@row.Party</td><td>@row.Branch</td><td>@row.Date.ToLocalTime().ToString("dd MMM yyyy")</td><td><span class="badge text-bg-light status-pill">@row.Status</span></td><td class="text-end">
+        @if (row.Status == MyERP.Domain.WorkflowStatus.Approved) { <form asp-action="Dispatch" method="post"><input type="hidden" name="id" value="@row.Id" /><button class="btn btn-sm btn-primary">Dispatch</button></form> }
+    </td></tr>
+}
+@if (!Model.Rows.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No sales orders yet.</td></tr> }
+</tbody></table></div></div></div>
