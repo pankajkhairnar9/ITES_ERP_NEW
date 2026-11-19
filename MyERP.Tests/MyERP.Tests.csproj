@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.34" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
@@ -25,6 +29,7 @@
     <ProjectReference Include="..\MyERP.Domain\MyERP.Domain.csproj" />
     <ProjectReference Include="..\MyERP.Application\MyERP.Application.csproj" />
     <ProjectReference Include="..\MyERP.Infrastructure\MyERP.Infrastructure.csproj" />
+    <ProjectReference Include="..\MyERP.Web\MyERP.Web.csproj" />
   </ItemGroup>
 
 </Project>

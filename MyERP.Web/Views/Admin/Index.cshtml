@@ -1,9 +1,13 @@
 @model MyERP.Web.Models.AdminPageViewModel
+@using MyERP.Web.Services
 @{
     ViewData["Title"] = "Company & access";
     var editingCompany = Model.EditingCompany;
     var editingBranch = Model.EditingBranch;
     var editingUser = Model.EditingUser;
+    var selfRegistrantRole = Model.Roles.FirstOrDefault(x => SelfRegistrationDefaults.IsSelfRegistrantRole(x.Name));
+    var editingUserIsSelfRegistrant = editingUser != null && selfRegistrantRole != null
+        && Model.UserRoleKeys.Contains(editingUser.Id + ":" + selfRegistrantRole.Id);
 }
 <div class="mb-4"><h1 class="h3 mb-1">Company & access</h1><p class="text-muted mb-0">Configure organizations, branch users, roles, permissions and navigation.</p></div>
 <div asp-validation-summary="All" class="text-danger"></div>
@@ -41,25 +45,14 @@
     </div></div></div>
     <div class="col-xl-6"><div class="card"><div class="card-body">
         <h2 class="h5">Users</h2>
-        @if (editingUser == null)
-        {
-            <form asp-action="SaveUser" method="post" class="row g-2 mb-3">
-                <div class="col-md-6"><input class="form-control" name="userName" placeholder="Display name" required maxlength="100" /></div>
-                <div class="col-md-6"><input class="form-control" type="email" name="email" placeholder="Email" required /></div>
-                <div class="col-md-6"><input class="form-control" type="password" name="password" placeholder="Temporary password (12+ characters)" minlength="12" required autocomplete="new-password" /></div>
-                <div class="col-md-3"><select class="form-select" name="branchId"><option value="">All branches</option>@foreach (var b in Model.Branches) { <option value="@b.Id">@b.Name</option> }</select></div>
-                <div class="col-md-3"><select class="form-select" name="roleId" required><option value="">Role</option>@foreach (var r in Model.Roles) { <option value="@r.Id">@r.Name</option> }</select></div>
-                <div class="col-12"><button class="btn btn-primary">Create user</button></div>
-            </form>
-        }
-        else
+        @if (editingUser != null)
         {
             <form asp-action="SaveUserDetails" method="post" class="row g-2 mb-3">
                 <input type="hidden" name="id" value="@editingUser.Id" />
                 <div class="col-md-3"><input class="form-control" name="userName" value="@editingUser.UserName" required maxlength="100" /></div>
                 <div class="col-md-3"><input class="form-control" type="email" name="email" value="@editingUser.Email" required /></div>
                 <div class="col-md-3"><input class="form-control" type="password" name="password" placeholder="New password (optional, 12+)" minlength="12" autocomplete="new-password" /></div>
-                <div class="col-md-2"><select class="form-select" name="branchId"><option value="">All branches</option>@foreach (var b in Model.Branches) { <option value="@b.Id" selected="@(editingUser.BranchId == b.Id)">@b.Name</option> }</select></div>
+                <div class="col-md-2"><select class="form-select" name="branchId"><option value="">@(editingUserIsSelfRegistrant && !editingUser.BranchId.HasValue ? "No branch access (assign a branch)" : "All branches")</option>@foreach (var b in Model.Branches) { <option value="@b.Id" selected="@(editingUser.BranchId == b.Id)">@b.Name</option> }</select></div>
                 <div class="col-md-1"><input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@editingUser.IsActive" title="Active" /></div>
                 <div class="col-12"><button class="btn btn-primary">Save user</button> <a class="btn btn-light" asp-action="Index">Cancel</a></div>
             </form>
@@ -67,7 +60,8 @@
         <div class="table-responsive"><table class="table table-sm"><thead><tr><th>User</th><th>Branch</th><th>Status</th><th>Roles</th></tr></thead><tbody>
         @foreach (var user in Model.Users)
         {
-            <tr><td><a asp-action="Index" asp-route-userId="@user.Id">@user.Email</a></td><td>@(user.Branch == null ? "All branches" : user.Branch.Name)</td><td>@(user.IsActive ? "Active" : "Inactive")</td>
+            var userIsSelfRegistrant = selfRegistrantRole != null && Model.UserRoleKeys.Contains(user.Id + ":" + selfRegistrantRole.Id);
+            <tr><td><a asp-action="Index" asp-route-userId="@user.Id">@user.Email</a></td><td>@(user.Branch == null ? (userIsSelfRegistrant ? "No branch access" : "All branches") : user.Branch.Name)</td><td>@(user.IsActive ? "Active" : "Inactive")</td>
                 <td class="text-nowrap">@foreach (var role in Model.Roles) { var assigned = Model.UserRoleKeys.Contains(user.Id + ":" + role.Id); <form asp-action="SetUserRole" method="post" class="form-check form-check-inline"><input type="hidden" name="userId" value="@user.Id" /><input type="hidden" name="roleId" value="@role.Id" /><input class="form-check-input" type="checkbox" name="enabled" value="true" checked="@assigned" onchange="this.form.submit()" /><label class="form-check-label small">@role.Name</label></form> }</td></tr>
         }
         </tbody></table></div>

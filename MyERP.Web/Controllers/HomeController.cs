@@ -25,6 +25,9 @@ namespace MyERP.Web.Controllers
         [Authorize(Policy = "dashboard.view")]
         public async Task<IActionResult> Index()
         {
+            if (User.HasClaim("branch_scope", "none"))
+                return View(new DashboardViewModel { BranchAssignmentRequired = true });
+
             var items = await _db.Items.ToDictionaryAsync(x => x.Id);
             var transactions = _db.InventoryTransactions.AsQueryable();
             var assignedBranchId = User.FindFirst("branch_id");
