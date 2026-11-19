@@ -14,6 +14,21 @@ namespace MyERP.Web.Models
         public string ReturnUrl { get; set; }
     }
 
+    public sealed class UserRegistrationViewModel
+    {
+        [Required, StringLength(100)]
+        public string UserName { get; set; }
+
+        [Required, EmailAddress, StringLength(160)]
+        public string Email { get; set; }
+
+        [Required, DataType(DataType.Password), StringLength(256, MinimumLength = 12, ErrorMessage = "The password must be between 12 and 256 characters.")]
+        public string Password { get; set; }
+
+        [Required, DataType(DataType.Password), Compare(nameof(Password), ErrorMessage = "The passwords do not match.")]
+        public string ConfirmPassword { get; set; }
+    }
+
     public sealed class MasterInput
     {
         [Required, StringLength(40)]

@@ -6,6 +6,14 @@
     <div><h1 class="h3 mb-1">Operations dashboard</h1><p class="text-muted mb-0">A live view of purchasing, sales and inventory.</p></div>
     <span class="badge text-bg-light">@DateTime.Today.ToString("dddd, dd MMM yyyy")</span>
 </div>
+@if (Model.BranchAssignmentRequired)
+{
+    <div class="alert alert-info" role="status">
+        Your account has restricted access and no branch is assigned. Contact an administrator to request access to a branch.
+    </div>
+}
+else
+{
 <div class="row g-3">
     <div class="col-sm-6 col-xl-3"><div class="card metric-card"><div class="card-body"><div class="text-muted">Pending approvals</div><div class="metric">@Model.PendingApprovals</div><a asp-controller="Operations" asp-action="Requests">Review purchasing</a></div></div></div>
     <div class="col-sm-6 col-xl-3"><div class="card metric-card"><div class="card-body"><div class="text-muted">Active items</div><div class="metric">@Model.ItemCount</div><a asp-controller="Master" asp-action="Index" asp-route-kind="Items">Manage items</a></div></div></div>
@@ -17,3 +25,4 @@
     <div class="col-lg-4"><div class="card h-100"><div class="card-body"><div class="text-muted">Suppliers</div><div class="metric">@Model.SupplierCount</div><a asp-controller="Master" asp-action="Index" asp-route-kind="Suppliers">Manage suppliers</a></div></div></div>
     <div class="col-lg-4"><div class="card h-100"><div class="card-body"><div class="text-muted">Customers</div><div class="metric">@Model.CustomerCount</div><a asp-controller="Master" asp-action="Index" asp-route-kind="Customers">Manage customers</a></div></div></div>
 </div>
+}

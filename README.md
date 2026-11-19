@@ -53,7 +53,8 @@ The setup script uses Windows Authentication and the configured SQL Server 2019 
 - Goods receipts reference an approved purchase order. Receipt approval validates the outstanding ordered quantities and posts inventory transactions.
 - Sales orders reserve no stock until dispatch. Dispatch checks branch-level on-hand quantity and posts stock outflow.
 - Stock adjustments require a reason and cannot make stock negative. Reports aggregate the posted inventory ledger by branch and item.
-- Users with an assigned branch can transact only at that branch. Users without a branch assignment can select any active branch.
+- Users with an assigned branch can transact only at that branch. Administrators may manage cross-branch users; public self-registrants have no branch access until an administrator assigns one.
+- Public registration is available from the sign-in page. It requires a unique email, display name, and matching 12–256 character password; ASP.NET Core's `PasswordHasher` stores only the password hash. Registrants cannot choose roles, permissions, companies, or branches. The app creates or validates the built-in `SelfRegistrant` role with only `dashboard.view`; this role is protected against permission escalation. Accounts start without branch access (not all-branch access), and the dashboard displays no ERP data until an administrator assigns a branch. Registration reuses existing tables and requires no schema migration.
 - The menu is rendered from active menu records only when the signed-in user has the corresponding permission claim. Configure roles and permissions under **Company & access**.
 
 AngularJS 1.x and Bootstrap 5 are loaded from pinned public CDNs in the MVC layout; an internet connection is required for those browser assets. The server-side MVC forms remain functional without AngularJS, but dynamic line-entry controls will not be available.

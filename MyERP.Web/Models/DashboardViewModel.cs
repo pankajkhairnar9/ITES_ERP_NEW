@@ -2,6 +2,7 @@ namespace MyERP.Web.Models
 {
     public sealed class DashboardViewModel
     {
+        public bool BranchAssignmentRequired { get; set; }
         public int SupplierCount { get; set; }
         public int CustomerCount { get; set; }
         public int ItemCount { get; set; }

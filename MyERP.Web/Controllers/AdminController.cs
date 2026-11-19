@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using MyERP.Application;
 using MyERP.Domain;
 using MyERP.Web.Models;
+using MyERP.Web.Services;
 
 namespace MyERP.Web.Controllers
 {
@@ -79,34 +80,6 @@ namespace MyERP.Web.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveUser(string userName, string email, string password, int? branchId, int roleId)
-        {
-            if (string.IsNullOrWhiteSpace(userName) || userName.Length > 100 || !new EmailAddressAttribute().IsValid(email)
-                || string.IsNullOrWhiteSpace(password) || password.Length < 12)
-            {
-                ModelState.AddModelError(string.Empty, "Enter a name and email and a password of at least 12 characters.");
-                return await Index();
-            }
-            if (await _db.Users.AnyAsync(x => x.Email == email))
-            {
-                ModelState.AddModelError(string.Empty, "A user with this email already exists.");
-                return await Index();
-            }
-            if (roleId <= 0 || !await _db.Roles.AnyAsync(x => x.Id == roleId))
-            {
-                ModelState.AddModelError(string.Empty, "Select a valid role.");
-                return await Index();
-            }
-            var user = new ErpUser { UserName = userName.Trim(), Email = email.Trim(), BranchId = branchId, IsActive = true };
-            user.PasswordHash = _passwordHasher.HashPassword(user, password);
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-            _db.UserRoles.Add(new ErpUserRole { UserId = user.Id, RoleId = roleId });
-            await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveUserDetails(int id, string userName, string email, string password, int? branchId, bool isActive)
         {
             var user = await _db.Users.FindAsync(id);
@@ -142,6 +115,11 @@ namespace MyERP.Web.Controllers
         public async Task<IActionResult> SaveRole(string name, string description)
         {
             if (string.IsNullOrWhiteSpace(name)) { ModelState.AddModelError(string.Empty, "Role name is required."); return await Index(); }
+            if (string.Equals(name.Trim(), SelfRegistrationDefaults.RoleName, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(string.Empty, "This role name is reserved for public registration.");
+                return await Index();
+            }
             _db.Roles.Add(new ErpRole { Name = name.Trim(), Description = description });
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -163,6 +141,16 @@ namespace MyERP.Web.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignPermission(int roleId, int permissionId, bool enabled)
         {
+            var role = await _db.Roles.FindAsync(roleId);
+            var permission = await _db.Permissions.FindAsync(permissionId);
+            if (role == null || permission == null) return NotFound();
+            if (SelfRegistrationDefaults.IsSelfRegistrantRole(role.Name)
+                && ((enabled && permission.Code != SelfRegistrationDefaults.PermissionCode)
+                    || (!enabled && permission.Code == SelfRegistrationDefaults.PermissionCode)))
+            {
+                ModelState.AddModelError(string.Empty, "The public registration role can only have the dashboard.view permission.");
+                return await Index();
+            }
             var current = await _db.RolePermissions.SingleOrDefaultAsync(x => x.RoleId == roleId && x.PermissionId == permissionId);
             if (enabled && current == null) _db.RolePermissions.Add(new ErpRolePermission { RoleId = roleId, PermissionId = permissionId });
             if (!enabled && current != null) _db.RolePermissions.Remove(current);
@@ -202,5 +190,6 @@ namespace MyERP.Web.Controllers
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
     }
 }
