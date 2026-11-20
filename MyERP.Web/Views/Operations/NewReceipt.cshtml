@@ -2,25 +2,66 @@
 @{
     ViewData["Title"] = Model.Title;
 }
-<div class="mb-3"><h1 class="h3">Receive goods</h1><p class="text-muted">Select an approved purchase order and enter quantities received.</p></div>
-@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
-<div class="card"><div class="card-body">
-    <div class="mb-3"><label class="form-label" for="orderSelect">Purchase order</label><select class="form-select" id="orderSelect" onchange="if(this.value) location.href='@Url.Action("NewReceipt")?orderId='+this.value"><option value="">Select approved order</option>@foreach (var order in Model.ApprovedOrders) { <option value="@order.Id" selected="@(Model.SelectedOrderId == order.Id)">@order.Number</option> }</select></div>
-    @if (Model.SelectedOrderId.HasValue)
-    {
-        <form asp-action="NewReceipt" method="post">
-            <input type="hidden" name="Input.RelatedId" value="@Model.SelectedOrderId" />
-            <div class="row g-3 mb-3"><div class="col-md-4"><label class="form-label">Receipt number</label><input class="form-control" name="Input.Number" required value="GRN-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" /></div><div class="col-md-8"><label class="form-label">Notes</label><input class="form-control" name="Input.Notes" /></div></div>
-            <div class="table-responsive"><table class="table"><thead><tr><th>Item</th><th>Ordered</th><th>Received now</th></tr></thead><tbody>
-                @for (var index = 0; index < Model.SelectedOrderLines.Count; index++)
+<div class="page-intro"><p>Select an approved purchase order and enter quantities received.</p></div>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+}
+<div class="card operations-form-card">
+    <div class="card-body">
+        <div class="form-group">
+            <label class="control-label" for="orderSelect">Purchase order</label>
+            <select class="form-control" id="orderSelect" onchange="if(this.value) location.href='@Url.Action("NewReceipt")?orderId='+this.value">
+                <option value="">Select approved order</option>
+                @foreach (var order in Model.ApprovedOrders)
                 {
-                    var line = Model.SelectedOrderLines[index];
-                    var item = Model.Items.FirstOrDefault(x => x.Id == line.ItemId);
-                    <tr><td>@(item == null ? "Item " + line.ItemId : item.Code + " — " + item.Name)</td><td>@line.Quantity</td>
-                        <td><input type="hidden" name="Input.Lines[@index].PurchaseOrderLineId" value="@line.Id" /><input class="form-control" type="number" name="Input.Lines[@index].Quantity" min="0" step="0.001" value="0" /></td></tr>
+                    <option value="@order.Id" selected="@(Model.SelectedOrderId == order.Id)">@order.Number</option>
                 }
-            </tbody></table></div>
-            <div class="d-flex gap-2"><button class="btn btn-primary">Submit receipt for approval</button><a asp-action="Receipts" class="btn btn-light">Cancel</a></div>
-        </form>
-    }
-</div></div>
+            </select>
+        </div>
+        @if (Model.SelectedOrderId.HasValue)
+        {
+            <form asp-action="NewReceipt" method="post">
+                <input type="hidden" name="Input.RelatedId" value="@Model.SelectedOrderId" />
+                <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label class="control-label" for="receiptNumber">Receipt number <span class="required-mark">*</span></label>
+                        <input class="form-control" id="receiptNumber" name="Input.Number" required maxlength="40" value="GRN-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" />
+                    </div>
+                    <div class="col-md-8 form-group">
+                        <label class="control-label" for="receiptNotes">Notes</label>
+                        <input class="form-control" id="receiptNotes" name="Input.Notes" maxlength="400" />
+                    </div>
+                </div>
+                <div class="section-heading mt-3">
+                    <div><h2 class="section-title">Receipt quantities</h2><p class="section-description">Enter the quantity received for each purchase order line.</p></div>
+                </div>
+                <div class="table-responsive document-lines">
+                    <table class="table">
+                        <thead><tr><th>Item</th><th>Ordered</th><th>Received now</th></tr></thead>
+                        <tbody>
+                            @for (var index = 0; index < Model.SelectedOrderLines.Count; index++)
+                            {
+                                var line = Model.SelectedOrderLines[index];
+                                var item = Model.Items.FirstOrDefault(x => x.Id == line.ItemId);
+                                <tr>
+                                    <td>@(item == null ? "Item " + line.ItemId : item.Code + " - " + item.Name)</td>
+                                    <td>@line.Quantity</td>
+                                    <td>
+                                        <input type="hidden" name="Input.Lines[@index].PurchaseOrderLineId" value="@line.Id" />
+                                        <input class="form-control" type="number" name="Input.Lines[@index].Quantity" min="0" step="0.001" value="0" aria-label="Received quantity for @(item?.Name ?? "item")" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-action-row">
+                    <button class="btn btn-primary" type="submit">Submit receipt for approval</button>
+                    <button class="btn btn-light" type="reset">Reset</button>
+                    <a asp-action="Receipts" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        }
+    </div>
+</div>

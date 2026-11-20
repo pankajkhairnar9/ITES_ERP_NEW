@@ -4,15 +4,18 @@
 }
 <div class="row justify-content-center py-5">
     <div class="col-md-5 col-lg-4">
-        <div class="card border-0 shadow-sm">
+        <div class="card auth-form-card">
             <div class="card-body p-4">
-                <h1 class="h3 mb-2">Sign in to MyERP</h1>
+                <div class="auth-form-heading">
+                    <i class="mdi mdi-shield-account-outline"></i>
+                    <h1 class="h3 mb-2">Sign in to MyERP</h1>
+                </div>
                 <p class="text-muted mb-4">Use your company account to continue.</p>
                 @if (TempData["RegistrationSuccess"] is string success)
                 {
                     <div class="alert alert-success" role="status">@success</div>
                 }
-                <form asp-action="Login" method="post">
+                <form asp-action="Login" method="post" class="erp-auth-form">
                     <input asp-for="ReturnUrl" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">

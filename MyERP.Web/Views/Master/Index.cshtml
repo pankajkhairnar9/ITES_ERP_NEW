@@ -2,72 +2,123 @@
 @{
     ViewData["Title"] = Model.Title;
     var editId = ViewData["EditId"] ?? 0;
+    var isEditing = Convert.ToInt32(editId) != 0;
 }
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div><h1 class="h3 mb-1">@Model.Title</h1><p class="text-muted mb-0">Maintain active @Model.Title.ToLowerInvariant() records.</p></div>
-    <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Dashboard</a>
-</div>
-<div class="row g-3">
+<div class="page-intro"><p>Maintain active @Model.Title.ToLowerInvariant() records.</p></div>
+<div class="row">
     <div class="col-xl-4">
-        <div class="card"><div class="card-body">
-            <h2 class="h5 mb-3">@(Convert.ToInt32(editId) == 0 ? "Add" : "Edit") @Model.Title.TrimEnd('s')</h2>
-            <form asp-action="Save" method="post">
-                <input type="hidden" name="kind" value="@Model.Kind" />
-                <input type="hidden" name="id" value="@editId" />
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <div class="mb-3"><label asp-for="Input.Code" class="form-label">Code</label><input asp-for="Input.Code" class="form-control" /></div>
-                <div class="mb-3"><label asp-for="Input.Name" class="form-label">Name</label><input asp-for="Input.Name" class="form-control" /></div>
-                @if (Model.Kind != "Items")
-                {
-                    <div class="mb-3"><label asp-for="Input.ContactName" class="form-label">Contact</label><input asp-for="Input.ContactName" class="form-control" /></div>
-                    <div class="mb-3"><label asp-for="Input.Email" class="form-label">Email</label><input asp-for="Input.Email" class="form-control" /></div>
-                    <div class="mb-3"><label asp-for="Input.Phone" class="form-label">Phone</label><input asp-for="Input.Phone" class="form-control" /></div>
-                    <div class="mb-3"><label asp-for="Input.Address" class="form-label">Address</label><textarea asp-for="Input.Address" class="form-control" rows="2"></textarea></div>
-                }
-                else
-                {
-                    <div class="mb-3"><label asp-for="Input.Unit" class="form-label">Unit (e.g. ea, kg)</label><input asp-for="Input.Unit" class="form-control" /></div>
-                    <div class="row">
-                        <div class="col"><label asp-for="Input.UnitPrice" class="form-label">Unit price</label><input asp-for="Input.UnitPrice" class="form-control" /></div>
-                        <div class="col"><label asp-for="Input.ReorderLevel" class="form-label">Reorder level</label><input asp-for="Input.ReorderLevel" class="form-control" /></div>
-                    </div>
-                }
-                <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Save</button>
-                    @if (Convert.ToInt32(editId) != 0) { <a class="btn btn-light" asp-action="Index" asp-route-kind="@Model.Kind">Cancel</a> }
+        <section class="card operations-form-card">
+            <div class="card-body">
+                <div class="section-heading">
+                    <div><h2 class="section-title">@(isEditing ? "Edit" : "Add") @Model.Title.TrimEnd('s')</h2><p class="section-description">Enter the record details below.</p></div>
+                    <i class="mdi @(Model.Kind == "Items" ? "mdi-package-variant" : "mdi-account-box-outline") section-heading-icon"></i>
                 </div>
-            </form>
-        </div></div>
+                <form asp-action="Save" method="post">
+                    <input type="hidden" name="kind" value="@Model.Kind" />
+                    <input type="hidden" name="id" value="@editId" />
+                    <div asp-validation-summary="ModelOnly" class="validation-summary text-danger mb-3"></div>
+                    <div class="form-group">
+                        <label asp-for="Input.Code" class="control-label">Code <span class="required-mark">*</span></label>
+                        <input asp-for="Input.Code" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="Input.Code" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.Name" class="control-label">Name <span class="required-mark">*</span></label>
+                        <input asp-for="Input.Name" class="form-control" />
+                        <span asp-validation-for="Input.Name" class="text-danger"></span>
+                    </div>
+                    @if (Model.Kind != "Items")
+                    {
+                        <div class="form-group">
+                            <label asp-for="Input.ContactName" class="control-label">Contact name</label>
+                            <input asp-for="Input.ContactName" class="form-control" />
+                            <span asp-validation-for="Input.ContactName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.Email" class="control-label">Email</label>
+                            <input asp-for="Input.Email" class="form-control" type="email" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.Phone" class="control-label">Phone</label>
+                            <input asp-for="Input.Phone" class="form-control" type="tel" />
+                            <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.Address" class="control-label">Address</label>
+                            <textarea asp-for="Input.Address" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Input.Address" class="text-danger"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group">
+                            <label asp-for="Input.Unit" class="control-label">Unit <span class="required-mark">*</span></label>
+                            <input asp-for="Input.Unit" class="form-control" placeholder="e.g. ea, kg" />
+                            <span asp-validation-for="Input.Unit" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.UnitPrice" class="control-label">Unit price <span class="required-mark">*</span></label>
+                            <input asp-for="Input.UnitPrice" class="form-control" type="number" min="0" step="0.01" />
+                            <span asp-validation-for="Input.UnitPrice" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.ReorderLevel" class="control-label">Reorder level <span class="required-mark">*</span></label>
+                            <input asp-for="Input.ReorderLevel" class="form-control" type="number" min="0" step="0.001" />
+                            <span asp-validation-for="Input.ReorderLevel" class="text-danger"></span>
+                        </div>
+                    }
+                    <div class="form-action-row">
+                        <button class="btn btn-primary" type="submit">@(isEditing ? "Update" : "Save")</button>
+                        <button class="btn btn-light" type="reset">Reset</button>
+                        @if (isEditing)
+                        {
+                            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-kind="@Model.Kind">Cancel</a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </section>
     </div>
     <div class="col-xl-8">
-        <div class="card"><div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">Records <span class="text-muted">(@Model.Rows.Count)</span></h2></div>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead><tr><th>Code</th><th>Name</th><th>@(Model.Kind == "Items" ? "Unit / Price" : "Contact")</th><th>Status</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var row in Model.Rows)
-                    {
-                        <tr>
-                            <td>@row.Code</td><td>@row.Name</td>
-                            <td>@(Model.Kind == "Items" ? row.Unit + " / " + row.UnitPrice.ToString("N2") : row.Contact)</td>
-                            <td><span class="badge @(row.IsActive ? "text-bg-success" : "text-bg-secondary")">@(row.IsActive ? "Active" : "Inactive")</span></td>
-                            <td class="text-end text-nowrap">
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-kind="@Model.Kind" asp-route-id="@row.Id">Edit</a>
-                                @if (row.IsActive)
-                                {
-                                    <form asp-action="Delete" method="post" class="d-inline">
-                                        <input type="hidden" name="kind" value="@Model.Kind" /><input type="hidden" name="id" value="@row.Id" />
-                                        <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Deactivate this record?')">Deactivate</button>
-                                    </form>
-                                }
-                            </td>
-                        </tr>
-                    }
-                    @if (!Model.Rows.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">No records yet.</td></tr> }
-                    </tbody>
-                </table>
+        <section class="card operation-table-card">
+            <div class="card-body">
+                <div class="section-heading">
+                    <div><h2 class="section-title">Records</h2><p class="section-description">@Model.Rows.Count record(s)</p></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Code</th><th>Name</th><th>@(Model.Kind == "Items" ? "Unit / Price" : "Contact")</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+                        <tbody>
+                            @foreach (var row in Model.Rows)
+                            {
+                                <tr>
+                                    <td class="font-weight-medium">@row.Code</td>
+                                    <td>@row.Name</td>
+                                    <td>@(Model.Kind == "Items" ? row.Unit + " / " + row.UnitPrice.ToString("N2") : row.Contact)</td>
+                                    <td><span class="status-text @(row.IsActive ? "status-text--active" : "status-text--inactive")">@(row.IsActive ? "Active" : "Inactive")</span></td>
+                                    <td class="text-right text-nowrap">
+                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-kind="@Model.Kind" asp-route-id="@row.Id">Edit</a>
+                                        @if (row.IsActive)
+                                        {
+                                            <form asp-action="Delete" method="post" class="form-inline-action">
+                                                <input type="hidden" name="kind" value="@Model.Kind" />
+                                                <input type="hidden" name="id" value="@row.Id" />
+                                                <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Deactivate this record?')">Deactivate</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.Rows.Any())
+                            {
+                                <tr><td colspan="5" class="table-empty-state">No records yet.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div></div>
+        </section>
     </div>
 </div>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

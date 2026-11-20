@@ -1,7 +1,15 @@
 @{
     ViewData["Title"] = "Access denied";
 }
-<div class="alert alert-warning mt-4">
-    <h1 class="h4">Access denied</h1>
-    <p class="mb-0">Your account is not permitted to open this page. Contact your ERP administrator.</p>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card auth-message-card">
+            <div class="card-body text-center">
+                <i class="mdi mdi-lock-outline auth-message-icon text-warning"></i>
+                <h1 class="h4 mt-3">Access denied</h1>
+                <p class="text-muted">Your account is not permitted to open this page. Contact your ERP administrator.</p>
+                <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Return to dashboard</a>
+            </div>
+        </div>
+    </div>
 </div>

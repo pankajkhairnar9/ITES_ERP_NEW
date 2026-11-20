@@ -34,8 +34,8 @@ namespace MyERP.Web.Services
                 .Select(x => new NavigationLinkViewModel
                 {
                     Name = x.Name,
-                    Url = x.Url,
-                    IsActive = IsActivePath(path, x.Url)
+                    Url = ResolveMenuUrl(x.Url),
+                    IsActive = IsActivePath(path, ResolveMenuUrl(x.Url), HttpContext.Request.Query)
                 })
                 .ToList();
 
@@ -68,6 +68,43 @@ namespace MyERP.Web.Services
             var normalizedMenu = NormalizePath(menuUrl);
             return normalizedRequest.Equals(normalizedMenu, StringComparison.OrdinalIgnoreCase)
                 || (normalizedMenu != "/" && normalizedRequest.StartsWith(normalizedMenu + "/", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool IsActivePath(string requestPath, string menuUrl, Microsoft.AspNetCore.Http.IQueryCollection query)
+        {
+            string masterKind;
+            switch (menuUrl)
+            {
+                case "/Master/Index?kind=Suppliers":
+                    masterKind = "Suppliers";
+                    break;
+                case "/Master/Index?kind=Customers":
+                    masterKind = "Customers";
+                    break;
+                case "/Master/Index?kind=Items":
+                    masterKind = "Items";
+                    break;
+                default:
+                    return IsActivePath(requestPath, menuUrl);
+            }
+
+            return NormalizePath(requestPath).Equals("/Master/Index", StringComparison.OrdinalIgnoreCase)
+                && query["kind"].ToString().Equals(masterKind, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ResolveMenuUrl(string url)
+        {
+            switch (url.ToLowerInvariant())
+            {
+                case "/master/suppliers":
+                    return "/Master/Index?kind=Suppliers";
+                case "/master/customers":
+                    return "/Master/Index?kind=Customers";
+                case "/master/items":
+                    return "/Master/Index?kind=Items";
+                default:
+                    return url;
+            }
         }
 
         private static string NormalizePath(string path)

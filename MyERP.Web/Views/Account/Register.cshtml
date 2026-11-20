@@ -4,11 +4,14 @@
 }
 <div class="row justify-content-center py-5">
     <div class="col-md-6 col-lg-5">
-        <div class="card border-0 shadow-sm">
+        <div class="card auth-form-card">
             <div class="card-body p-4">
-                <h1 class="h3 mb-2">Create your account</h1>
+                <div class="auth-form-heading">
+                    <i class="mdi mdi-account-plus-outline"></i>
+                    <h1 class="h3 mb-2">Create your account</h1>
+                </div>
                 <p class="text-muted mb-4">Your new account starts with restricted access. An administrator can assign a branch and additional permissions.</p>
-                <form asp-action="Register" method="post" autocomplete="off">
+                <form asp-action="Register" method="post" autocomplete="off" class="erp-auth-form">
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
                     <div class="mb-3">
                         <label asp-for="UserName" class="form-label">Name</label>

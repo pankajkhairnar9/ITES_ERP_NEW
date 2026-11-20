@@ -13,5 +13,10 @@
             $scope.removeLine = function (index) {
                 if ($scope.lines.length > 1) $scope.lines.splice(index, 1);
             };
+            $scope.resetForm = function (event) {
+                var form = event.currentTarget.form;
+                if (form) form.reset();
+                $scope.lines = [{ itemId: "", purchaseOrderLineId: "", quantity: 1, unitPrice: 0 }];
+            };
         }]);
 }());

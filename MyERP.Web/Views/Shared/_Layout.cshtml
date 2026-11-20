@@ -13,7 +13,7 @@
 <body ng-app="erp" class="@(User.Identity != null && User.Identity.IsAuthenticated ? "" : "authentication-wrapper")">
     @if (User.Identity != null && User.Identity.IsAuthenticated)
     {
-        <div id="main-wrapper" data-sidebartype="full">
+        <div id="main-wrapper" data-layout="vertical" data-sidebartype="full">
             <partial name="_Header" />
             <partial name="_Sidebar" />
             <div class="page-wrapper">
