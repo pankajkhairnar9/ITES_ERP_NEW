@@ -7,7 +7,7 @@ MyERP is an ASP.NET Core MVC ERP starter for Visual Studio 2022 and SQL Server 2
 - `MyERP.Domain` — ERP entities and workflow statuses.
 - `MyERP.Application` — persistence abstraction and purchasing/inventory workflow rules.
 - `MyERP.Infrastructure` — EF Core 8 SQL Server provider and SQL Server model configuration.
-- `MyERP.Web` — MVC controllers, Razor views, cookie authentication, AngularJS 1.x interactions, and Bootstrap 5 UI.
+- `MyERP.Web` — MVC controllers, Razor views, cookie authentication, AngularJS 1.x interactions, and the repository's Nice Admin template UI.
 - `MyERP.Tests` — focused workflow tests using EF Core's in-memory provider.
 
 ## Requirements
@@ -57,7 +57,7 @@ The setup script uses Windows Authentication and the configured SQL Server 2019 
 - Public registration is available from the sign-in page. It requires a unique email, display name, and matching 12–256 character password; ASP.NET Core's `PasswordHasher` stores only the password hash. Registrants cannot choose roles, permissions, companies, or branches. The app creates or validates the built-in `SelfRegistrant` role with only `dashboard.view`; this role is protected against permission escalation. Accounts start without branch access (not all-branch access), and the dashboard displays no ERP data until an administrator assigns a branch. An existing administrator can promote a selected user through **Company & access**; role changes require confirmation, are logged, and administrators cannot change their own role assignments. Registration reuses existing tables and requires no schema migration.
 - The menu is rendered from active menu records only when the signed-in user has the corresponding permission claim. Configure roles and permissions under **Company & access**.
 
-AngularJS 1.x and Bootstrap 5 are loaded from pinned public CDNs in the MVC layout; an internet connection is required for those browser assets. The server-side MVC forms remain functional without AngularJS, but dynamic line-entry controls will not be available.
+The MVC layout and Razor views use the existing Nice Admin template assets copied under `MyERP.Web\wwwroot\template`; no replacement template or external theme is downloaded. The template supplies its Bootstrap 4 styling and plugins locally, with compatibility styling for Bootstrap 5 utility classes already used by the ERP views. AngularJS 1.x remains loaded from its existing public CDN; an internet connection is needed for dynamic purchase/sales line entry, while the rest of the server-rendered forms continue to work. The dashboard chart and approval counts are derived from current database records and branch scope; it does not seed or display demo transactions.
 
 ## Build
 

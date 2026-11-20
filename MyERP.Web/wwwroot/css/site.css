@@ -1,19 +1,107 @@
 :root {
-  --erp-ink: #1d2b3a;
-  --erp-muted: #687789;
-  --erp-surface: #f5f7fa;
+  --erp-primary: #2962ff;
+  --erp-ink: #3e5569;
+  --erp-muted: #6c757d;
 }
 
-html { font-size: 15px; min-height: 100%; }
-body { background: var(--erp-surface); color: var(--erp-ink); min-height: 100vh; }
+html { min-height: 100%; }
+body { min-height: 100vh; color: var(--erp-ink); }
 a { text-decoration: none; }
-a:hover { text-decoration: underline; }
-.navbar-brand { letter-spacing: .02em; }
-.card { border: 1px solid #e8edf2; border-radius: .75rem; box-shadow: 0 .2rem .7rem rgba(23, 43, 77, .04); }
+a:hover { text-decoration: none; }
+
+.navbar-brand { display: flex; align-items: center; min-width: 215px; }
+.navbar-brand .logo-icon img { width: 35px; max-height: 35px; }
+.navbar-brand .logo-text img { max-width: 125px; max-height: 28px; margin-left: .5rem; }
+.topbar .navbar { padding-left: 1.25rem; padding-right: 1.5rem; }
+.topbar .navbar-header { display: flex; align-items: center; }
+.topbar .navbar-header .sidebartoggler { color: rgba(255,255,255,.85); }
+.topbar .navbar-nav .nav-link { color: rgba(255,255,255,.9); }
+.user-profile-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  font-weight: 600;
+}
+.notification-badge { position: absolute; top: 5px; right: 2px; }
+.approval-notice-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem 1rem; border-bottom: 1px solid #f1f1f1; }
+.page-breadcrumb { background: #fff; padding: 18px 24px; }
+.page-wrapper > .container-fluid { min-height: calc(100vh - 190px); }
+.page-title { color: #3e5569; }
+.left-sidebar .sidebar-link.active { font-weight: 600; }
+.left-sidebar .sidebar-link[aria-current="page"] { color: var(--erp-primary); }
+
+.card { border: 0; border-radius: 4px; box-shadow: 0 0 15px rgba(0,0,0,.045); margin-bottom: 20px; }
+.card .card-title { color: #3e5569; font-weight: 600; }
 .metric-card { min-height: 145px; }
-.metric { font-size: 2rem; font-weight: 650; letter-spacing: -.03em; margin: .35rem 0; }
-.table > :not(caption) > * > * { vertical-align: middle; }
-.table thead th { color: var(--erp-muted); font-size: .82rem; font-weight: 600; text-transform: uppercase; }
-.form-label { font-weight: 550; }
+.metric { font-size: 2rem; font-weight: 600; letter-spacing: -.03em; margin: .35rem 0; }
+.table > tbody > tr > td, .table > thead > tr > th { vertical-align: middle; }
+.table thead th { color: #6c757d; font-size: .82rem; font-weight: 600; text-transform: uppercase; }
+.form-label, .control-label { font-weight: 600; }
+.form-control, .form-select { border-color: #e9ecef; }
+.form-select {
+  display: block;
+  width: 100%;
+  height: calc(1.5em + .75rem + 2px);
+  padding: .375rem 1.75rem .375rem .75rem;
+  color: #4f5467;
+  font-size: 1rem;
+  line-height: 1.5;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 2px;
+}
+.form-select:focus { border-color: #80bdff; outline: 0; box-shadow: 0 0 0 .2rem rgba(0,123,255,.18); }
 .document-lines .form-control, .document-lines .form-select { min-width: 100px; }
 .status-pill { text-transform: capitalize; }
+
+/* Preserve the Bootstrap 5 utility classes used by existing ERP views on the Bootstrap 4 theme. */
+.text-end { text-align: right !important; }
+.text-bg-light { color: #4f5467 !important; background-color: #f1f2f6 !important; }
+.text-bg-warning { color: #212529 !important; background-color: #ffc107 !important; }
+.text-bg-success { color: #fff !important; background-color: #28a745 !important; }
+.text-bg-secondary { color: #fff !important; background-color: #6c757d !important; }
+.text-bg-danger { color: #fff !important; background-color: #dc3545 !important; }
+.text-bg-primary { color: #fff !important; background-color: #2962ff !important; }
+.gap-2 { gap: .5rem; }
+.row.g-2, .row.g-3 { margin-left: -.5rem; margin-right: -.5rem; }
+.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-left: .5rem; padding-right: .5rem; }
+.row.g-2 { margin-bottom: .5rem; }
+.row.g-3 > [class*="col-"] { margin-bottom: .5rem; }
+.d-flex.gap-2 > * { margin-right: .5rem; }
+.d-flex.gap-2 > *:last-child { margin-right: 0; }
+.d-flex.flex-wrap.gap-2 > * { margin-bottom: .5rem; }
+.form-text { display: block; margin-top: .25rem; color: #6c757d; font-size: 80%; }
+.dashboard-icon { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; font-size: 27px; }
+.bg-light-warning { background-color: rgba(255,193,7,.16); }
+.bg-light-info { background-color: rgba(23,162,184,.14); }
+.bg-light-primary { background-color: rgba(41,98,255,.12); }
+.bg-light-success { background-color: rgba(40,167,69,.13); }
+.dashboard-chart { height: 280px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 1.25rem; color: #6c757d; font-size: .85rem; }
+.legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: .4rem; }
+.dashboard-stat-row { display: flex; justify-content: space-between; padding: .7rem 0; border-bottom: 1px solid #f1f1f1; }
+.dashboard-stat-row:last-of-type { border-bottom: 0; }
+
+.authentication-wrapper { background: #f6f7fb; }
+.authentication-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.authentication-shell .topbar { position: relative; }
+.authentication-shell .topbar .navbar { min-height: 64px; }
+.authentication-content { flex: 1; width: 100%; max-width: 1140px; margin: 0 auto; padding: 1rem 15px 3rem; }
+.authentication-content > .row { margin-top: 1.5rem; }
+.authentication-content .card { border-radius: 5px; }
+.authentication-content .form-control { min-height: 42px; }
+.authentication-shell .footer { position: static; width: 100%; }
+
+@media (max-width: 767.98px) {
+  .topbar .navbar { padding-left: .75rem; padding-right: .75rem; }
+  .navbar-brand { min-width: 0; }
+  .navbar-brand .logo-text img { max-width: 105px; }
+  .page-breadcrumb { padding: 15px; }
+  .page-wrapper > .container-fluid { padding-left: 15px; padding-right: 15px; }
+  .authentication-content { padding-top: 1rem; }
+}
