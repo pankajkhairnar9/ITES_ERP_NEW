@@ -2,16 +2,61 @@
 @{
     ViewData["Title"] = Model.Title;
 }
-<div class="mb-3"><h1 class="h3 mb-1">Stock adjustment</h1><p class="text-muted mb-0">Record a positive or negative inventory correction with a reason.</p></div>
-@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
-@if (TempData["Message"] != null) { <div class="alert alert-success">@TempData["Message"]</div> }
-<div class="card"><div class="card-body">
-    <form asp-action="Adjustments" method="post" class="row g-3">
-        <div class="col-md-3"><label class="form-label">Reference</label><input class="form-control" name="reference" maxlength="40" required value="ADJ-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" /></div>
-        <div class="col-md-3"><label class="form-label">Branch</label><select class="form-select" name="branchId" required><option value="">Select branch</option>@foreach (var branch in Model.Branches) { <option value="@branch.Id">@branch.Name</option> }</select></div>
-        <div class="col-md-3"><label class="form-label">Item</label><select class="form-select" name="itemId" required><option value="">Select item</option>@foreach (var item in Model.Items) { <option value="@item.Id">@item.Code — @item.Name</option> }</select></div>
-        <div class="col-md-3"><label class="form-label">Quantity change (+/-)</label><input class="form-control" type="number" name="quantityDelta" step="0.001" required /></div>
-        <div class="col-12"><label class="form-label">Reason</label><textarea class="form-control" name="reason" maxlength="400" required></textarea></div>
-        <div class="col-12"><button class="btn btn-primary">Post adjustment</button><a asp-action="Reports" class="btn btn-light">View stock report</a></div>
-    </form>
-</div></div>
+<div class="page-intro"><p>Record a positive or negative inventory correction with a reason.</p></div>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+}
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success" role="status">@TempData["Message"]</div>
+}
+<div class="card operations-form-card">
+    <div class="card-body">
+        <div class="section-heading">
+            <div><h2 class="section-title">New stock adjustment</h2><p class="section-description">Provide the item, branch, quantity change, and audit reason.</p></div>
+            <i class="mdi mdi-tune section-heading-icon"></i>
+        </div>
+        <form asp-action="Adjustments" method="post">
+            <div class="row">
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="adjustmentReference">Reference <span class="required-mark">*</span></label>
+                    <input class="form-control" id="adjustmentReference" name="reference" maxlength="40" required value="ADJ-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" />
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="adjustmentBranch">Branch <span class="required-mark">*</span></label>
+                    <select class="form-control" id="adjustmentBranch" name="branchId" required>
+                        <option value="">Select branch</option>
+                        @foreach (var branch in Model.Branches)
+                        {
+                            <option value="@branch.Id">@branch.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="adjustmentItem">Item <span class="required-mark">*</span></label>
+                    <select class="form-control" id="adjustmentItem" name="itemId" required>
+                        <option value="">Select item</option>
+                        @foreach (var item in Model.Items)
+                        {
+                            <option value="@item.Id">@item.Code - @item.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="adjustmentQuantity">Quantity change (+/-) <span class="required-mark">*</span></label>
+                    <input class="form-control" id="adjustmentQuantity" type="number" name="quantityDelta" step="0.001" required />
+                </div>
+                <div class="col-12 form-group">
+                    <label class="control-label" for="adjustmentReason">Reason <span class="required-mark">*</span></label>
+                    <textarea class="form-control" id="adjustmentReason" name="reason" maxlength="400" required rows="3"></textarea>
+                </div>
+            </div>
+            <div class="form-action-row">
+                <button class="btn btn-primary" type="submit">Post adjustment</button>
+                <button class="btn btn-light" type="reset">Reset</button>
+                <a asp-action="Reports" class="btn btn-outline-secondary">View stock report</a>
+            </div>
+        </form>
+    </div>
+</div>

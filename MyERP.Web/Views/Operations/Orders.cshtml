@@ -2,30 +2,81 @@
 @{
     ViewData["Title"] = Model.Title;
 }
-<div class="mb-3"><h1 class="h3 mb-1">Purchase orders</h1><p class="text-muted mb-0">Create orders from approved requests, then route them for approval.</p></div>
-@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
-<div class="card mb-3"><div class="card-body">
-    <h2 class="h5">Create from approved request</h2>
-    <form asp-action="CreateOrder" method="post" class="row g-2 align-items-end">
-        <div class="col-md-3"><label class="form-label">Purchase request</label><select class="form-select" name="requestId" required><option value="">Select request</option>@foreach (var request in Model.ApprovedRequests) { <option value="@request.Id">@request.Number</option> }</select></div>
-        <div class="col-md-3"><label class="form-label">Supplier</label><select class="form-select" name="supplierId" required><option value="">Select supplier</option>@foreach (var supplier in Model.Suppliers) { <option value="@supplier.Id">@supplier.Name</option> }</select></div>
-        <div class="col-md-3"><label class="form-label">Order number</label><input class="form-control" name="number" required maxlength="40" value="PO-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" /></div>
-        <div class="col-md-2"><label class="form-label">Notes</label><input class="form-control" name="notes" /></div>
-        <div class="col-md-1"><button class="btn btn-primary w-100">Create</button></div>
-    </form>
-</div></div>
-<div class="card"><div class="card-body">
-    <div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Order</th><th>Supplier</th><th>Branch</th><th>Ordered</th><th>Status</th><th class="text-end">Action</th></tr></thead><tbody>
-    @foreach (var row in Model.Rows)
-    {
-        <tr><td class="fw-semibold">@row.Number</td><td>@row.Party</td><td>@row.Branch</td><td>@row.Date.ToLocalTime().ToString("dd MMM yyyy")</td><td><span class="badge text-bg-light status-pill">@row.Status</span></td><td class="text-end">
-            @if (row.Status == MyERP.Domain.WorkflowStatus.Submitted && User.HasClaim("permission", "purchase.order.approve"))
-            {
-                <form asp-action="ReviewOrder" method="post" class="d-inline"><input type="hidden" name="id" value="@row.Id" /><input type="hidden" name="approve" value="true" /><button class="btn btn-sm btn-success">Approve</button></form>
-                <form asp-action="ReviewOrder" method="post" class="d-inline"><input type="hidden" name="id" value="@row.Id" /><input type="hidden" name="approve" value="false" /><button class="btn btn-sm btn-outline-danger">Reject</button></form>
-            }
-        </td></tr>
-    }
-    @if (!Model.Rows.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No purchase orders yet.</td></tr> }
-    </tbody></table></div>
-</div></div>
+<div class="page-intro"><p>Create orders from approved requests, then route them for approval.</p></div>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+}
+<div class="card operations-form-card mb-3">
+    <div class="card-body">
+        <div class="section-heading">
+            <div><h2 class="section-title">Create purchase order</h2><p class="section-description">Select an approved request and supplier to prepare an order.</p></div>
+            <i class="mdi mdi-file-document-edit-outline section-heading-icon"></i>
+        </div>
+        <form asp-action="CreateOrder" method="post">
+            <div class="row">
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="purchaseRequest">Purchase request <span class="required-mark">*</span></label>
+                    <select class="form-control" id="purchaseRequest" name="requestId" required>
+                        <option value="">Select request</option>
+                        @foreach (var request in Model.ApprovedRequests)
+                        {
+                            <option value="@request.Id">@request.Number</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="purchaseSupplier">Supplier <span class="required-mark">*</span></label>
+                    <select class="form-control" id="purchaseSupplier" name="supplierId" required>
+                        <option value="">Select supplier</option>
+                        @foreach (var supplier in Model.Suppliers)
+                        {
+                            <option value="@supplier.Id">@supplier.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="purchaseOrderNumber">Order number <span class="required-mark">*</span></label>
+                    <input class="form-control" id="purchaseOrderNumber" name="number" required maxlength="40" value="PO-@DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")" />
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label" for="purchaseOrderNotes">Notes</label>
+                    <input class="form-control" id="purchaseOrderNotes" name="notes" maxlength="400" />
+                </div>
+            </div>
+            <div class="form-action-row">
+                <button class="btn btn-primary" type="submit">Create order</button>
+                <button class="btn btn-light" type="reset">Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card operation-table-card">
+    <div class="card-body">
+        <div class="section-heading"><div><h2 class="section-title">Purchase orders</h2><p class="section-description">@Model.Rows.Count order(s)</p></div></div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Order</th><th>Supplier</th><th>Branch</th><th>Ordered</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td class="font-weight-medium">@row.Number</td><td>@row.Party</td><td>@row.Branch</td><td>@row.Date.ToLocalTime().ToString("dd MMM yyyy")</td><td><span class="badge text-bg-light status-pill">@row.Status</span></td>
+                            <td class="text-right">
+                                @if (row.Status == MyERP.Domain.WorkflowStatus.Submitted && User.HasClaim("permission", "purchase.order.approve"))
+                                {
+                                    <form asp-action="ReviewOrder" method="post" class="form-inline-action"><input type="hidden" name="id" value="@row.Id" /><input type="hidden" name="approve" value="true" /><button class="btn btn-sm btn-success">Approve</button></form>
+                                    <form asp-action="ReviewOrder" method="post" class="form-inline-action"><input type="hidden" name="id" value="@row.Id" /><input type="hidden" name="approve" value="false" /><button class="btn btn-sm btn-outline-danger">Reject</button></form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Rows.Any())
+                    {
+                        <tr><td colspan="6" class="table-empty-state">No purchase orders yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -5,6 +5,13 @@
     var monthLabels = Model.MonthlyOrderActivity.Select(x => x.Month).ToArray();
     var purchaseSeries = Model.MonthlyOrderActivity.Select(x => x.PurchaseOrders).ToArray();
     var salesSeries = Model.MonthlyOrderActivity.Select(x => x.SalesOrders).ToArray();
+    var canViewPurchaseOrders = User.HasClaim("permission", "purchase.order") || User.HasClaim("permission", "purchase.order.approve");
+    var canViewSalesOrders = User.HasClaim("permission", "sales.manage");
+    var orderSeries = new List<int[]>();
+    if (canViewPurchaseOrders) orderSeries.Add(purchaseSeries);
+    if (canViewSalesOrders) orderSeries.Add(salesSeries);
+    var canViewMasterData = User.HasClaim("permission", "masters.manage");
+    var canViewInventory = User.HasClaim("permission", "reports.view") || User.HasClaim("permission", "stock.adjust");
 }
 @if (Model.BranchAssignmentRequired)
 {
@@ -14,152 +21,166 @@
 }
 else
 {
-    <div class="row">
+    <div class="row dashboard-summary-row">
         @if (User.HasClaim("permission", "purchase.approve") || User.HasClaim("permission", "purchase.order.approve") || User.HasClaim("permission", "grn.manage"))
         {
-            <div class="col-md-6 col-lg-3">
-                <div class="card">
+            <div class="col-md-6 col-xl-4">
+                <div class="card dashboard-summary-card dashboard-summary-card--warning">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div><span class="text-muted">Pending approvals</span><h2 class="mb-0 mt-2">@Model.PendingApprovals</h2></div>
-                            <div class="ml-auto"><i class="mdi mdi-clipboard-check dashboard-icon bg-light-warning text-warning"></i></div>
+                        <div class="dashboard-summary-icon"><i class="mdi mdi-clipboard-check"></i></div>
+                        <div class="dashboard-summary-copy">
+                            <span class="dashboard-summary-label">Pending approvals</span>
+                            <strong class="dashboard-summary-value">@Model.PendingApprovals</strong>
                         </div>
                     </div>
                 </div>
             </div>
         }
-        @if (User.HasClaim("permission", "masters.manage"))
+        @if (canViewMasterData)
         {
-            <div class="col-md-6 col-lg-3">
-                <div class="card">
+            <div class="col-md-6 col-xl-4">
+                <div class="card dashboard-summary-card dashboard-summary-card--info">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div><span class="text-muted">Active items</span><h2 class="mb-0 mt-2">@Model.ItemCount</h2></div>
-                            <div class="ml-auto"><i class="mdi mdi-package-variant dashboard-icon bg-light-info text-info"></i></div>
+                        <div class="dashboard-summary-icon"><i class="mdi mdi-package-variant"></i></div>
+                        <div class="dashboard-summary-copy">
+                            <span class="dashboard-summary-label">Active items</span>
+                            <strong class="dashboard-summary-value">@Model.ItemCount</strong>
                         </div>
-                        <a class="small d-inline-block mt-3" asp-controller="Master" asp-action="Index" asp-route-kind="Items">Manage items</a>
+                        <a class="dashboard-summary-link" asp-controller="Master" asp-action="Index" asp-route-kind="Items">Manage items <i class="mdi mdi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
         }
         @if (User.HasClaim("permission", "purchase.order"))
         {
-            <div class="col-md-6 col-lg-3">
-                <div class="card">
+            <div class="col-md-6 col-xl-4">
+                <div class="card dashboard-summary-card dashboard-summary-card--primary">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div><span class="text-muted">Open purchase orders</span><h2 class="mb-0 mt-2">@Model.OpenPurchaseOrders</h2></div>
-                            <div class="ml-auto"><i class="mdi mdi-truck-delivery dashboard-icon bg-light-primary text-primary"></i></div>
+                        <div class="dashboard-summary-icon"><i class="mdi mdi-truck-delivery"></i></div>
+                        <div class="dashboard-summary-copy">
+                            <span class="dashboard-summary-label">Open purchase orders</span>
+                            <strong class="dashboard-summary-value">@Model.OpenPurchaseOrders</strong>
                         </div>
-                        <a class="small d-inline-block mt-3" asp-controller="Operations" asp-action="Orders">View orders</a>
-                    </div>
-                </div>
-            </div>
-        }
-        @if (User.HasClaim("permission", "sales.manage"))
-        {
-            <div class="col-md-6 col-lg-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div><span class="text-muted">Sales orders to dispatch</span><h2 class="mb-0 mt-2">@Model.OpenSalesOrders</h2></div>
-                            <div class="ml-auto"><i class="mdi mdi-cart-outline dashboard-icon bg-light-success text-success"></i></div>
-                        </div>
-                        <a class="small d-inline-block mt-3" asp-controller="Operations" asp-action="Sales">Manage dispatch</a>
+                        <a class="dashboard-summary-link" asp-controller="Operations" asp-action="Orders">View orders <i class="mdi mdi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <div class="row">
-        @if (User.HasClaim("permission", "purchase.order") || User.HasClaim("permission", "purchase.order.approve") || User.HasClaim("permission", "sales.manage"))
+    <div class="row dashboard-content-row">
+        @if (canViewPurchaseOrders || canViewSalesOrders)
         {
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div><h4 class="card-title mb-1">Order activity</h4><span class="text-muted">Purchase and sales orders over the last six months</span></div>
-                    </div>
-                    <div id="orderActivityChart" class="dashboard-chart" role="img" aria-label="Monthly purchase and sales order counts"></div>
-                    <div class="chart-legend">
-                        @if (User.HasClaim("permission", "purchase.order") || User.HasClaim("permission", "purchase.order.approve"))
-                        {
-                            <span><i class="legend-dot bg-primary"></i>Purchase orders</span>
-                        }
-                        @if (User.HasClaim("permission", "sales.manage"))
-                        {
-                            <span><i class="legend-dot bg-success"></i>Sales orders</span>
-                        }
+            <div class="@(canViewMasterData ? "col-lg-8" : "col-12")">
+                <div class="card dashboard-panel dashboard-order-panel">
+                    <div class="card-body">
+                        <div class="dashboard-panel-heading">
+                            <div>
+                                <h2 class="card-title">Order activity</h2>
+                                <p class="card-subtitle">Recent purchase and sales orders</p>
+                            </div>
+                            <span class="dashboard-period-label">Last 6 months</span>
+                        </div>
+                        <div id="orderActivityChart" class="dashboard-chart" role="img" aria-label="Monthly purchase and sales order counts"></div>
+                        <div class="chart-legend">
+                            @if (canViewPurchaseOrders)
+                            {
+                                <span><i class="legend-dot legend-dot--purchase"></i>Purchase orders</span>
+                            }
+                            @if (canViewSalesOrders)
+                            {
+                                <span><i class="legend-dot legend-dot--sales"></i>Sales orders</span>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         }
-        <div class="col-lg-4">
-            @if (User.HasClaim("permission", "reports.view"))
-            {
-                <div class="card h-100">
+        @if (canViewMasterData)
+        {
+            <div class="@(canViewPurchaseOrders || canViewSalesOrders ? "col-lg-4" : "col-12")">
+                <div class="card dashboard-panel dashboard-master-panel">
                     <div class="card-body">
-                        <h4 class="card-title">Inventory value</h4>
-                        <span class="text-muted">Current branch scope</span>
-                        <h2 class="mt-3">@Model.InventoryValue.ToString("N2")</h2>
-                        <a class="btn btn-outline-primary btn-sm mt-2" asp-controller="Operations" asp-action="Reports">Open stock report</a>
+                        <div class="dashboard-panel-heading">
+                            <div>
+                                <h2 class="card-title">Master data</h2>
+                                <p class="card-subtitle">Active business partners</p>
+                            </div>
+                            <i class="mdi mdi-database dashboard-panel-icon"></i>
+                        </div>
+                        <div class="master-data-stat">
+                            <span><i class="mdi mdi-truck-outline"></i>Suppliers</span>
+                            <strong>@Model.SupplierCount</strong>
+                        </div>
+                        <div class="master-data-stat">
+                            <span><i class="mdi mdi-account-multiple-outline"></i>Customers</span>
+                            <strong>@Model.CustomerCount</strong>
+                        </div>
+                        <a class="btn btn-primary dashboard-manage-button" asp-controller="Master" asp-action="Index" asp-route-kind="Suppliers">
+                            Manage master data <i class="mdi mdi-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
-            }
-            else if (User.HasClaim("permission", "masters.manage"))
-            {
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h4 class="card-title">Master data</h4>
-                        <div class="dashboard-stat-row"><span>Suppliers</span><strong>@Model.SupplierCount</strong></div>
-                        <div class="dashboard-stat-row"><span>Customers</span><strong>@Model.CustomerCount</strong></div>
-                        <a class="btn btn-outline-primary btn-sm mt-3" asp-controller="Master" asp-action="Index">Manage master data</a>
-                    </div>
-                </div>
-            }
-        </div>
+            </div>
+        }
     </div>
 
-    @if (User.HasClaim("permission", "reports.view") || User.HasClaim("permission", "stock.adjust"))
+    @if (User.HasClaim("permission", "purchase.request") || User.HasClaim("permission", "sales.manage") || User.HasClaim("permission", "stock.adjust"))
     {
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <h4 class="card-title mb-0">Recent inventory transactions</h4>
-                        @if (User.HasClaim("permission", "reports.view"))
-                        {
-                            <a class="btn btn-outline-primary btn-sm ml-auto" asp-controller="Operations" asp-action="Reports">View stock report</a>
-                        }
+        <div class="dashboard-quick-actions">
+            <span class="dashboard-quick-actions-label">Quick actions</span>
+            @if (User.HasClaim("permission", "purchase.request"))
+            {
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Operations" asp-action="NewRequest"><i class="mdi mdi-plus"></i> New purchase request</a>
+            }
+            @if (User.HasClaim("permission", "sales.manage"))
+            {
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Operations" asp-action="Sales"><i class="mdi mdi-plus"></i> New sales order</a>
+            }
+            @if (User.HasClaim("permission", "stock.adjust"))
+            {
+                <a class="btn btn-outline-secondary btn-sm" asp-controller="Operations" asp-action="Adjustments"><i class="mdi mdi-tune"></i> Adjust stock</a>
+            }
+        </div>
+    }
+
+    @if (canViewInventory)
+    {
+        <div class="card dashboard-panel dashboard-transactions-panel">
+            <div class="card-body">
+                <div class="dashboard-panel-heading">
+                    <div>
+                        <h2 class="card-title">Recent inventory activity</h2>
+                        <p class="card-subtitle">Latest posted movements in your branch scope</p>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead><tr><th>Date</th><th>Item</th><th>Transaction</th><th>Reference</th><th class="text-right">Quantity change</th></tr></thead>
-                            <tbody>
-                                @foreach (var transaction in Model.RecentInventoryActivity)
-                                {
-                                    <tr>
-                                        <td>@transaction.OccurredAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                                        <td><strong>@transaction.ItemCode</strong> <span class="text-muted">@transaction.ItemName</span></td>
-                                        <td>@transaction.TransactionType</td>
-                                        <td>@transaction.Reference</td>
-                                        <td class="text-right">@transaction.QuantityDelta.ToString("+0.###;-0.###;0")</td>
-                                    </tr>
-                                }
-                                @if (Model.RecentInventoryActivity.Count == 0)
-                                {
-                                    <tr><td colspan="5" class="text-center text-muted py-4">No inventory transactions are available in your branch scope.</td></tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    @if (User.HasClaim("permission", "reports.view"))
+                    {
+                        <a class="btn btn-outline-primary btn-sm" asp-controller="Operations" asp-action="Reports">View stock report</a>
+                    }
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover dashboard-table mb-0">
+                        <thead><tr><th>Date</th><th>Item</th><th>Transaction</th><th>Reference</th><th class="text-right">Quantity change</th></tr></thead>
+                        <tbody>
+                            @foreach (var transaction in Model.RecentInventoryActivity)
+                            {
+                                <tr>
+                                    <td>@transaction.OccurredAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                    <td><strong>@transaction.ItemCode</strong><span class="text-muted ml-2">@transaction.ItemName</span></td>
+                                    <td>@transaction.TransactionType</td>
+                                    <td>@transaction.Reference</td>
+                                    <td class="text-right">@transaction.QuantityDelta.ToString("+0.###;-0.###;0")</td>
+                                </tr>
+                            }
+                            @if (Model.RecentInventoryActivity.Count == 0)
+                            {
+                                <tr><td colspan="5" class="table-empty-state">No inventory transactions are available in your branch scope.</td></tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
     }
 }
 @section Scripts {
@@ -169,14 +190,12 @@ else
             if (!chart || !window.Chartist) return;
             new Chartist.Line("#orderActivityChart", {
                 labels: @Html.Raw(JsonSerializer.Serialize(monthLabels)),
-                series: [
-                    @Html.Raw(JsonSerializer.Serialize(purchaseSeries)),
-                    @Html.Raw(JsonSerializer.Serialize(salesSeries))
-                ]
+                series: @Html.Raw(JsonSerializer.Serialize(orderSeries))
             }, {
                 fullWidth: true,
                 low: 0,
                 showArea: true,
+                lineSmooth: Chartist.Interpolation.simple({ divisor: 2 }),
                 chartPadding: { right: 24 },
                 axisY: { onlyInteger: true, offset: 32 },
                 plugins: [Chartist.plugins.tooltip()]
