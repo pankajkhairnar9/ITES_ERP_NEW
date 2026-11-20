@@ -1,0 +1,21 @@
+<div class="page-breadcrumb">
+    <div class="row">
+        <div class="col-7 align-self-center">
+            <h4 class="page-title">@ViewData["Title"]</h4>
+            <div class="d-flex align-items-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb m-0 p-0">
+                        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                        @if (!string.Equals(ViewData["Title"]?.ToString(), "Dashboard", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                        }
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <div class="col-5 align-self-center text-right d-none d-md-block">
+            <span class="text-muted">@DateTime.Today.ToString("dddd, dd MMM yyyy")</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+@model MyERP.Web.Models.ApprovalNoticesViewModel
+<a class="nav-link dropdown-toggle waves-effect waves-dark" href="#" id="approvalNotices" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Pending approvals">
+    <i class="mdi mdi-bell-outline font-22"></i>
+    @if (Model.Total > 0)
+    {
+        <span class="badge badge-danger badge-pill notification-badge">@Model.Total</span>
+    }
+</a>
+<div class="dropdown-menu dropdown-menu-right mailbox animated bounceInDown" aria-labelledby="approvalNotices">
+    <div class="drop-title">Pending approvals (@Model.Total)</div>
+    @if (Model.Items.Count == 0)
+    {
+        <div class="message-center message-body"><span class="dropdown-item-text text-muted">No approval queues assigned.</span></div>
+    }
+    else
+    {
+        <div class="message-center message-body">
+            @foreach (var item in Model.Items)
+            {
+                <div class="approval-notice-row">
+                    <span>@item.Name</span><span class="badge badge-light">@item.Count</span>
+                </div>
+            }
+        </div>
+    }
+</div>

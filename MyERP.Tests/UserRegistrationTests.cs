@@ -300,6 +300,83 @@ public sealed class UserRegistrationTests
     }
 
     [Fact]
+    public async Task Dashboard_charts_and_recent_transactions_use_the_assigned_branch()
+    {
+        await using var db = CreateDatabase();
+        var company = new Company { Code = "C1", Name = "Company" };
+        db.Companies.Add(company);
+        await db.SaveChangesAsync();
+        var branch = new Branch { CompanyId = company.Id, Code = "B1", Name = "Assigned branch" };
+        var otherBranch = new Branch { CompanyId = company.Id, Code = "B2", Name = "Other branch" };
+        var supplier = new Supplier { Code = "S1", Name = "Supplier" };
+        var customer = new Customer { Code = "CU1", Name = "Customer" };
+        var item = new Item { Code = "I1", Name = "Widget", Unit = "ea", UnitPrice = 10 };
+        db.AddRange(branch, otherBranch, supplier, customer, item);
+        await db.SaveChangesAsync();
+        var orderDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(-1).AddDays(1);
+        db.PurchaseOrders.Add(new PurchaseOrder
+        {
+            Number = "PO-B1",
+            BranchId = branch.Id,
+            SupplierId = supplier.Id,
+            OrderedAt = orderDate,
+            Status = WorkflowStatus.Approved
+        });
+        db.SalesOrders.Add(new SalesOrder
+        {
+            Number = "SO-B1",
+            BranchId = branch.Id,
+            CustomerId = customer.Id,
+            OrderedAt = orderDate,
+            Status = WorkflowStatus.Approved
+        });
+        db.InventoryTransactions.AddRange(
+            new InventoryTransaction
+            {
+                BranchId = branch.Id,
+                ItemId = item.Id,
+                QuantityDelta = 3,
+                TransactionType = "Receipt",
+                Reference = "GRN-B1",
+                OccurredAt = orderDate
+            },
+            new InventoryTransaction
+            {
+                BranchId = otherBranch.Id,
+                ItemId = item.Id,
+                QuantityDelta = 8,
+                TransactionType = "Receipt",
+                Reference = "GRN-B2",
+                OccurredAt = orderDate.AddHours(1)
+            });
+        await db.SaveChangesAsync();
+
+        var context = new DefaultHttpContext();
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(
+            new[]
+            {
+                new Claim("branch_id", branch.Id.ToString()),
+                new Claim("permission", "purchase.order"),
+                new Claim("permission", "sales.manage"),
+                new Claim("permission", "reports.view")
+            }, "test"));
+        var controller = new HomeController(NullLogger<HomeController>.Instance, db)
+        {
+            ControllerContext = new ControllerContext { HttpContext = context }
+        };
+
+        var result = Assert.IsType<ViewResult>(await controller.Index());
+        var model = Assert.IsType<DashboardViewModel>(result.Model);
+
+        Assert.Equal(6, model.MonthlyOrderActivity.Count);
+        var previousMonth = model.MonthlyOrderActivity.Single(x => x.Month == orderDate.ToString("MMM"));
+        Assert.Equal(1, previousMonth.PurchaseOrders);
+        Assert.Equal(1, previousMonth.SalesOrders);
+        Assert.Single(model.RecentInventoryActivity);
+        Assert.Equal("GRN-B1", model.RecentInventoryActivity[0].Reference);
+    }
+
+    [Fact]
     public void Registration_requires_valid_name_email_and_matching_12_character_password()
     {
         var model = ValidInput();

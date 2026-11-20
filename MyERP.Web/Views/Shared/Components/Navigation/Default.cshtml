@@ -1,5 +1,31 @@
-@model IList<MyERP.Domain.MenuItem>
-@foreach (var item in Model)
+@model IList<MyERP.Web.Models.NavigationGroupViewModel>
+@foreach (var group in Model)
 {
-    <li class="nav-item"><a class="nav-link" href="@item.Url">@item.Name</a></li>
+    if (group.Items.Count == 1)
+    {
+        var item = group.Items[0];
+        <li class="sidebar-item">
+            <a class="sidebar-link waves-effect waves-dark @(item.IsActive ? "active" : "")" href="@item.Url" aria-current="@(item.IsActive ? "page" : null)">
+                <i class="mdi @group.Icon"></i><span class="hide-menu">@item.Name</span>
+            </a>
+        </li>
+    }
+    else
+    {
+        <li class="sidebar-item @(group.IsActive ? "selected" : "")">
+            <a class="sidebar-link has-arrow waves-effect waves-dark @(group.IsActive ? "active" : "")" href="javascript:void(0)" aria-expanded="@(group.IsActive ? "true" : "false")">
+                <i class="mdi @group.Icon"></i><span class="hide-menu">@group.Name</span>
+            </a>
+            <ul aria-expanded="@(group.IsActive ? "true" : "false")" class="collapse first-level @(group.IsActive ? "show" : "")">
+                @foreach (var item in group.Items)
+                {
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(item.IsActive ? "active" : "")" href="@item.Url" aria-current="@(item.IsActive ? "page" : null)">
+                            <i class="mdi mdi-checkbox-blank-circle"></i><span class="hide-menu">@item.Name</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </li>
+    }
 }

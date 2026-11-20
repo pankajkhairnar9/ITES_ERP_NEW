@@ -1,0 +1,47 @@
+@{
+    var profileName = string.IsNullOrWhiteSpace(User.Identity?.Name) ? "User" : User.Identity.Name;
+}
+<header class="topbar">
+    <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+        <div class="navbar-header">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <span class="logo-icon"><img src="~/template/assets/images/logo-light-icon.png" alt="" class="light-logo" /></span>
+                <span class="logo-text"><img src="~/template/assets/images/logo-light-text.png" alt="MyERP" class="light-logo" /></span>
+            </a>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <a class="nav-link sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar" aria-label="Toggle sidebar">
+                    <i class="mdi mdi-menu font-24"></i>
+                </a>
+            }
+        </div>
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <span class="nav-link text-nowrap">@ViewData["Title"]</span>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <li class="nav-item dropdown">
+                        @await Component.InvokeAsync("ApprovalNotices")
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userProfileMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="user-profile-initial">@profileName.Substring(0, 1).ToUpperInvariant()</span>
+                            <span class="ml-2 d-none d-sm-inline">@profileName</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userProfileMenu">
+                            <span class="dropdown-item-text text-muted">@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</span>
+                            <div class="dropdown-divider"></div>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="px-3 py-1">
+                                <button class="btn btn-outline-primary btn-sm btn-block" type="submit">Sign out</button>
+                            </form>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        }
+    </nav>
+</header>
